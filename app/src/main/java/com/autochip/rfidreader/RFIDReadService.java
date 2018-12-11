@@ -1,12 +1,13 @@
 package com.autochip.rfidreader;
 
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -14,20 +15,22 @@ import android.os.Build;
 import android.os.IBinder;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
-import android.view.WindowManager;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import static android.support.v4.app.NotificationCompat.PRIORITY_MAX;
+import static com.autochip.rfidreader.MainActivity.onServiceInterface;
 
 public class RFIDReadService extends Service {
 
     String channelId = "app_utility.TrackingService";
     String channelName = "tracking";
 
+    String sPreviousRFID = "";
     NotificationManager notifyMgr;
     NotificationCompat.Builder nBuilder;
     NotificationCompat.InboxStyle inboxStyle;
@@ -55,19 +58,41 @@ public class RFIDReadService extends Service {
                 CharSequence a = null;
                 if (clip != null && clip.getItemCount() > 0) {
                     a =  clip.getItemAt(0).coerceToText(getApplicationContext());
-                    /*HashMap<String, String> params = new HashMap<>();
-                    params.put("VendorID", etUserID.getText().toString());
-                    params.put("Pwd", etPassword.getText().toString());
-                    params.put("SourceApp", "0");
-                    VolleyTask volleyTask = new VolleyTask(getApplicationContext(), params, "PUSH_RFID");*/
+                    /*if(clip.getItemCount()>1){
+                        Toast.makeText(getApplicationContext(), ""+ clip.getItemCount(), Toast.LENGTH_SHORT).show();
+                    }*/
+                    if(!sPreviousRFID.equals(a.toString())) {
+                        HashMap<String, String> params = new HashMap<>();
+                        ArrayList<String> alTmp = new ArrayList<>();
+                        alTmp.add(a.toString());
+                        params.put("db", "Trufrost-Latest");
+                        params.put("user", "admin");
+                        params.put("password", "a");
+                        params.put("rfids", String.valueOf(alTmp));
+                        VolleyTask volleyTask = new VolleyTask(getApplicationContext(), params, "PUSH_RFID");
+                        sPreviousRFID = a.toString();
+                    }
                 }
-                Toast.makeText(getBaseContext(),"Copy:\n"+a,Toast.LENGTH_LONG).show();
+                /*if(onServiceInterface!=null){
+                    onServiceInterface.onServiceCall("RFID", a.toString());
+                } else {
+                    Intent in = new Intent(getApplicationContext(), MainActivity.class);
+                    startActivity(in);
+                    onServiceInterface.onServiceCall("RFID", a.toString());
+                }*/
+                //Toast.makeText(getBaseContext(),"Copy:\n"+a,Toast.LENGTH_LONG).show();
                 notifyUser(""+a);
             }
         });
         return START_STICKY;
     }
 
+    /*public boolean isForeground(String myPackage) {
+        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+        List<ActivityManager.RunningTaskInfo> runningTaskInfo = manager.getRunningTasks(1);
+        ComponentName componentInfo = runningTaskInfo.get(0).topActivity;
+        return componentInfo.getPackageName().equals(myPackage);
+    }*/
 
 
     @RequiresApi(api = Build.VERSION_CODES.O)

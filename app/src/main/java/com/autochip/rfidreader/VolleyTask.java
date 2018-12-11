@@ -1,6 +1,8 @@
 package com.autochip.rfidreader;
 
 import android.content.Context;
+import android.content.Intent;
+import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.NetworkResponse;
@@ -15,7 +17,8 @@ import java.util.HashMap;
 
 import app_utility.ApplicationController;
 
-import static app_utility.StaticReferenceClass.sPushRFIDURL;
+import static app_utility.StaticReferenceClass.sRFIDURL;
+import static com.autochip.rfidreader.MainActivity.onServiceInterface;
 
 public class VolleyTask {
 
@@ -43,7 +46,7 @@ public class VolleyTask {
     private void pushRFIDToOdoo(){
 
         StringRequest request = new StringRequest(
-                Request.Method.POST, sPushRFIDURL, //BASE_URL + Endpoint.USER
+                Request.Method.POST, sRFIDURL, //BASE_URL + Endpoint.USER
                 new Response.Listener<String>() {
 
                     @Override
@@ -87,6 +90,15 @@ public class VolleyTask {
         //SnackBarToast snackBarToast;
         switch (mStatusCode) {
             case 200: //success
+                msg = "Success";
+                if(onServiceInterface!=null){
+                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                } else {
+                    Intent in = new Intent(context, MainActivity.class);
+                    context.startActivity(in);
+                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                }
+                //Toast.makeText(context, "RFID : " + params.get("rfids") + " Submitted successfully", Toast.LENGTH_LONG).show();
                 /*JSONObject jsonObject;
                 PreferenceClass preferenceClass = new PreferenceClass(aActivity);
 
@@ -126,6 +138,16 @@ public class VolleyTask {
                 break;
             case 204: //authentication failed(wrong password)
                 //snackBarToast = new SnackBarToast(aActivity, aActivity.getResources().getString(R.string.wrong_password));
+                break;
+            case 400:
+                msg = "Failed to Submit, please check if server is available";
+                if(onServiceInterface!=null){
+                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                } else {
+                    Intent in = new Intent(context, MainActivity.class);
+                    context.startActivity(in);
+                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                }
                 break;
         }
         /*if (circularProgressBar != null && circularProgressBar.isShowing()) {
