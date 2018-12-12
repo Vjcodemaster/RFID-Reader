@@ -24,9 +24,9 @@ public class VolleyTask {
 
     private Context context;
     private int mStatusCode = 0;
-    private JSONObject jsonObject = new JSONObject();
-    private HashMap<String, String> params = new HashMap<>();
-    private int position;
+    //private JSONObject jsonObject = new JSONObject();
+    private HashMap<String, String> params;
+    //private int position;
     String msg;
 
     public VolleyTask(Context context, HashMap<String, String> params, String sCase) {
@@ -98,7 +98,7 @@ public class VolleyTask {
                     context.startActivity(in);
                     onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
                 }
-                //Toast.makeText(context, "RFID : " + params.get("rfids") + " Submitted successfully", Toast.LENGTH_LONG).show();
+                Toast.makeText(context, "RFID : " + params.get("rfids") + " Submitted successfully", Toast.LENGTH_LONG).show();
                 /*JSONObject jsonObject;
                 PreferenceClass preferenceClass = new PreferenceClass(aActivity);
 
@@ -134,7 +134,7 @@ public class VolleyTask {
 
                 break;
             case 203: //user not found
-                //snackBarToast = new SnackBarToast(aActivity, aActivity.getResources().getString(R.string.user_not_found));
+                //snackBarToast = new SnackBarToast(aActivity, aActivity.getResources().ge4tString(R.string.user_not_found));
                 break;
             case 204: //authentication failed(wrong password)
                 //snackBarToast = new SnackBarToast(aActivity, aActivity.getResources().getString(R.string.wrong_password));
