@@ -28,10 +28,12 @@ public class VolleyTask {
     private HashMap<String, String> params;
     //private int position;
     String msg;
+    int stockFlag;
 
-    public VolleyTask(Context context, HashMap<String, String> params, String sCase) {
+    public VolleyTask(Context context, HashMap<String, String> params, String sCase, int stockFlag) {
         this.context = context;
         this.params = params;
+        this.stockFlag = stockFlag;
         Volley(sCase);
     }
 
@@ -40,6 +42,9 @@ public class VolleyTask {
             case "PUSH_RFID":
                 pushRFIDToOdoo();
                 break;
+            /*case "OPEN_CONNECTION":
+                openConnectionOdoo();
+                break;*/
         }
     }
 
@@ -85,6 +90,18 @@ public class VolleyTask {
         ApplicationController.getInstance().addToRequestQueue(request);
 
     }
+
+    /*private void openConnectionOdoo(){
+        RequestFuture<JSONObject> future = RequestFuture.newFuture();
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, sRFIDURL,new JSONObject(params), future, future);
+        ApplicationController.getInstance().addToRequestQueue(request);
+
+        try {
+            JSONObject response = future.get();
+
+        } catch (InterruptedException | ExecutionException e) {
+        }
+    }*/
 
     private void onPostVolleyPushRFID(int mStatusCode, String response) {
         //SnackBarToast snackBarToast;

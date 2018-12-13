@@ -1,13 +1,11 @@
 package com.autochip.rfidreader;
 
-import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.ClipData;
 import android.content.ClipboardManager;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -16,19 +14,19 @@ import android.os.IBinder;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import static android.support.v4.app.NotificationCompat.PRIORITY_MAX;
-import static com.autochip.rfidreader.MainActivity.onServiceInterface;
 
 public class RFIDReadService extends Service {
 
     String channelId = "app_utility.TrackingService";
     String channelName = "tracking";
+    public static int stockFlag = 0;
+
+    static RFIDReadService refOfService;
 
     String sPreviousRFID = "";
     NotificationManager notifyMgr;
@@ -41,7 +39,7 @@ public class RFIDReadService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-
+        refOfService = this;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForeground();
         }
@@ -61,17 +59,20 @@ public class RFIDReadService extends Service {
                     /*if(clip.getItemCount()>1){
                         Toast.makeText(getApplicationContext(), ""+ clip.getItemCount(), Toast.LENGTH_SHORT).show();
                     }*/
-                    if(!sPreviousRFID.equals(a.toString())) {
+                    //if(!sPreviousRFID.equals(a.toString())) {
                         HashMap<String, String> params = new HashMap<>();
                         ArrayList<String> alTmp = new ArrayList<>();
                         alTmp.add(a.toString());
-                        params.put("db", "Trufrost-Latest");
+                        params.put("db", "Trufrost-Testing");
                         params.put("user", "admin");
                         params.put("password", "a");
-                        params.put("rfids", String.valueOf(alTmp));
-                        VolleyTask volleyTask = new VolleyTask(getApplicationContext(), params, "PUSH_RFID");
+                        //params.put("rfids", String.valueOf(alTmp));
+                    String text = a.toString();
+                    String s = text.substring(0, a.length()-2);
+                        params.put("rfids", s);
+                        VolleyTask volleyTask = new VolleyTask(getApplicationContext(), params, "PUSH_RFID", stockFlag);
                         sPreviousRFID = a.toString();
-                    }
+                    //}
                 }
                 /*if(onServiceInterface!=null){
                     onServiceInterface.onServiceCall("RFID", a.toString());
