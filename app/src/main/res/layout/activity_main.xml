@@ -29,8 +29,17 @@
         android:gravity="center"
         android:layout_height="wrap_content">
 
+        <Switch
+            android:id="@+id/swtich_stock"
+            android:layout_marginTop="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:switchPadding="8dp"
+            android:text="Start Physical Stock Count" />
+
         <TextView
             android:id="@+id/tv_rfid"
+            android:layout_marginTop="10dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
@@ -40,13 +49,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
 
-        <Switch
-            android:id="@+id/swtich_stock"
-            android:layout_marginTop="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:switchPadding="8dp"
-            android:text="Start Physical Stock Count" />
+
     </LinearLayout>
 
 

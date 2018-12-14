@@ -19,6 +19,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import static android.support.v4.app.NotificationCompat.PRIORITY_MAX;
+import static app_utility.StaticReferenceClass.sINVENTORYURL;
+import static app_utility.StaticReferenceClass.sRFIDURL;
 
 public class RFIDReadService extends Service {
 
@@ -54,6 +56,17 @@ public class RFIDReadService extends Service {
             public void onPrimaryClipChanged() {
                 ClipData clip = clipboard.getPrimaryClip();
                 CharSequence a = null;
+                String sMsg;
+                String URL;
+                if(stockFlag==0) {
+                    sMsg = "false";
+                    URL = sRFIDURL;
+                }
+                else {
+                    sMsg = "true";
+                    URL = sINVENTORYURL;
+                }
+
                 if (clip != null && clip.getItemCount() > 0) {
                     a =  clip.getItemAt(0).coerceToText(getApplicationContext());
                     /*if(clip.getItemCount()>1){
@@ -68,9 +81,10 @@ public class RFIDReadService extends Service {
                         params.put("password", "a");
                         //params.put("rfids", String.valueOf(alTmp));
                     String text = a.toString();
-                    String s = text.substring(0, a.length()-2);
-                        params.put("rfids", s);
-                        VolleyTask volleyTask = new VolleyTask(getApplicationContext(), params, "PUSH_RFID", stockFlag);
+                    String sRFID = text.substring(0, a.length()-2);
+                        params.put("rfids", sRFID);
+                        params.put("start_inventory", sMsg);
+                        VolleyTask volleyTask = new VolleyTask(getApplicationContext(), params, "PUSH_RFID", stockFlag, URL);
                         sPreviousRFID = a.toString();
                     //}
                 }

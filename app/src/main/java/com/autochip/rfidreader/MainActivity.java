@@ -3,6 +3,7 @@ package com.autochip.rfidreader;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -31,10 +32,14 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         aSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if (b)
+                if (b) {
                     RFIDReadService.stockFlag = 1;
-                else
+                    Log.e("stockflag", " "+1);
+                }
+                else {
                     RFIDReadService.stockFlag = 0;
+                    Log.e("stockflag", " "+0);
+                }
             }
         });
     }

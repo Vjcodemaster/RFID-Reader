@@ -5,12 +5,14 @@ import android.content.Intent;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.NetworkResponse;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -29,18 +31,20 @@ public class VolleyTask {
     //private int position;
     String msg;
     int stockFlag;
+    String URL;
 
-    public VolleyTask(Context context, HashMap<String, String> params, String sCase, int stockFlag) {
+    public VolleyTask(Context context, HashMap<String, String> params, String sCase, int stockFlag,String URL) {
         this.context = context;
         this.params = params;
         this.stockFlag = stockFlag;
+        this.URL = URL;
         Volley(sCase);
     }
 
     private void Volley(String sCase) {
         switch (sCase) {
             case "PUSH_RFID":
-                pushRFIDToOdoo();
+                pushRFIDToOdoo(URL);
                 break;
             /*case "OPEN_CONNECTION":
                 openConnectionOdoo();
@@ -48,10 +52,10 @@ public class VolleyTask {
         }
     }
 
-    private void pushRFIDToOdoo(){
+    private void pushRFIDToOdoo(String URL){
 
         StringRequest request = new StringRequest(
-                Request.Method.POST, sRFIDURL, //BASE_URL + Endpoint.USER
+                Request.Method.POST, URL, //BASE_URL + Endpoint.USER
                 new Response.Listener<String>() {
 
                     @Override
@@ -86,6 +90,10 @@ public class VolleyTask {
                 return "application/json";
             }
         };
+        request.setRetryPolicy(new DefaultRetryPolicy(
+                10000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         // add the request object to the queue to be executed
         ApplicationController.getInstance().addToRequestQueue(request);
 
@@ -107,15 +115,40 @@ public class VolleyTask {
         //SnackBarToast snackBarToast;
         switch (mStatusCode) {
             case 200: //success
-                msg = "Success";
-                if(onServiceInterface!=null){
-                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
-                } else {
-                    Intent in = new Intent(context, MainActivity.class);
-                    context.startActivity(in);
+                JSONObject jsonObject;
+                int sResponseCode = 0;
+                try {
+                    jsonObject = new JSONObject(response);
+                    String sResult = jsonObject.getString("result");
+                    jsonObject = new JSONObject(sResult);
+                    sResponseCode = jsonObject.getInt("response_code");
+                    msg = jsonObject.getString("message");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    msg = "Unable to reach server, please try again";
                     onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
                 }
-                Toast.makeText(context, "RFID : " + params.get("rfids") + " Submitted successfully", Toast.LENGTH_LONG).show();
+                if(sResponseCode == 200) {
+                    //msg = "Success";
+                    if (onServiceInterface != null) {
+                        onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                    } else {
+                        Intent in = new Intent(context, MainActivity.class);
+                        context.startActivity(in);
+                        onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                    }
+                    Toast.makeText(context, "RFID : " + params.get("rfids") + " Submitted successfully", Toast.LENGTH_LONG).show();
+                } else if(sResponseCode == 300){
+                    //msg = "RFID Doesn't exist";
+                    if(onServiceInterface!=null){
+                        onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                    } else {
+                        Intent in = new Intent(context, MainActivity.class);
+                        context.startActivity(in);
+                        onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                    }
+                    Toast.makeText(context, "RFID : " + params.get("rfids") + " Doesn't exist", Toast.LENGTH_LONG).show();
+                }
                 /*JSONObject jsonObject;
                 PreferenceClass preferenceClass = new PreferenceClass(aActivity);
 
@@ -144,8 +177,16 @@ public class VolleyTask {
                 aActivity.finish();*/
 
                 break;
-            case 201: //password is not updated
-
+            case 300: //RFID not exist
+                msg = "RFID Doesn't exist";
+                if(onServiceInterface!=null){
+                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                } else {
+                    Intent in = new Intent(context, MainActivity.class);
+                    context.startActivity(in);
+                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                }
+                Toast.makeText(context, "RFID : " + params.get("rfids") + " Doesn't exist", Toast.LENGTH_LONG).show();
                 break;
             case 202: //db error
 
