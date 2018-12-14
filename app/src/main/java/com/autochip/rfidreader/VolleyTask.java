@@ -21,6 +21,7 @@ import app_utility.ApplicationController;
 
 import static app_utility.StaticReferenceClass.sRFIDURL;
 import static com.autochip.rfidreader.MainActivity.onServiceInterface;
+import static com.autochip.rfidreader.RFIDReadService.isAlreadyInProgress;
 
 public class VolleyTask {
 
@@ -61,6 +62,7 @@ public class VolleyTask {
                     @Override
                     public void onResponse(String response) {
                         // Success
+                        isAlreadyInProgress = false;
                         onPostVolleyPushRFID(mStatusCode, response);
                     }
                 },
@@ -68,6 +70,7 @@ public class VolleyTask {
 
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        isAlreadyInProgress = false;
                         if (mStatusCode == 401) {
                             // HTTP Status Code: 401 Unauthorized
                         }
@@ -91,7 +94,7 @@ public class VolleyTask {
             }
         };
         request.setRetryPolicy(new DefaultRetryPolicy(
-                10000,
+                5000,
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         // add the request object to the queue to be executed
@@ -113,6 +116,7 @@ public class VolleyTask {
 
     private void onPostVolleyPushRFID(int mStatusCode, String response) {
         //SnackBarToast snackBarToast;
+
         switch (mStatusCode) {
             case 200: //success
                 JSONObject jsonObject;
@@ -137,7 +141,11 @@ public class VolleyTask {
                         context.startActivity(in);
                         onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
                     }
-                    Toast.makeText(context, "RFID : " + params.get("rfids") + " Submitted successfully", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(context, "RFID : " + params.get("rfids") + msg, Toast.LENGTH_LONG).show();
+                    for (int i=0; i<2; i++){
+                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+                    }
+
                 } else if(sResponseCode == 300){
                     //msg = "RFID Doesn't exist";
                     if(onServiceInterface!=null){
@@ -147,7 +155,10 @@ public class VolleyTask {
                         context.startActivity(in);
                         onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
                     }
-                    Toast.makeText(context, "RFID : " + params.get("rfids") + " Doesn't exist", Toast.LENGTH_LONG).show();
+                    //Toast.makeText(context, "RFID : " + params.get("rfids") + msg, Toast.LENGTH_LONG).show();
+                    for (int i=0; i<2; i++){
+                        Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
+                    }
                 }
                 /*JSONObject jsonObject;
                 PreferenceClass preferenceClass = new PreferenceClass(aActivity);
