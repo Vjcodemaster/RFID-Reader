@@ -4,10 +4,12 @@ import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
@@ -30,11 +32,14 @@ public class RFIDReadService extends Service {
     String channelId = "app_utility.TrackingService";
     String channelName = "tracking";
     public static int stockFlag = 0;
+    ArrayList<String> alData = new ArrayList<>();
 
     public static boolean isAlreadyInProgress = false;
 
     static RFIDReadService refOfService;
     NetworkState networkState;
+    IntentFilter intentFilterData;
+    BroadcastReceiver broadcastReceiverData;
 
     String sPreviousRFID = "";
     NotificationManager notifyMgr;
@@ -49,6 +54,17 @@ public class RFIDReadService extends Service {
         super.onCreate();
         refOfService = this;
         networkState = new NetworkState();
+        intentFilterData = new IntentFilter("com.scanner.broadcast");
+        broadcastReceiverData = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                String s = intent.getExtras().getString("data");
+                Toast.makeText(getApplicationContext(), "" + alData.size(), Toast.LENGTH_SHORT).show();
+                //testWithAlDataBase(alBeaconInfo);
+            }
+        };
+        getApplicationContext().registerReceiver(broadcastReceiverData, intentFilterData);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForeground();
         }
@@ -85,9 +101,9 @@ public class RFIDReadService extends Service {
                         HashMap<String, String> params = new HashMap<>();
                         ArrayList<String> alTmp = new ArrayList<>();
                         alTmp.add(a.toString());
-                        params.put("db", "Trufrost-Testing");
+                        params.put("db", "Trufrost-Live"); //Trufrost-Testing
                         params.put("user", "admin");
-                        params.put("password", "a");
+                        params.put("password", "autochip@505");
                         //params.put("rfids", String.valueOf(alTmp));
                         String text = a.toString();
                         String sRFID = text.substring(0, a.length() - 2);
