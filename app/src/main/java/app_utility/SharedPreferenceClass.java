@@ -20,6 +20,8 @@ public class SharedPreferenceClass {
 
     private static final String IS_LOGGED_IN = "IS_LOGGED_IN";
 
+    private static final String IS_INITIALIZED = "IS_INITIALIZED";
+
 
 
     // Constructor
@@ -28,6 +30,14 @@ public class SharedPreferenceClass {
 
         sharedPreferences = _context.getSharedPreferences(APP_PREFERENCES, PRIVATE_MODE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.apply();
+    }
+
+    public void setIfUserIsTraceable(boolean isTraceable){
+        SharedPreferences sharedPreferences = _context.getSharedPreferences(APP_PREFERENCES, PRIVATE_MODE);
+        SharedPreferences.Editor editor;
+        editor = sharedPreferences.edit();
+        editor.putBoolean(IS_INITIALIZED, isTraceable);
         editor.apply();
     }
 

@@ -1,8 +1,10 @@
 package com.autochip.rfidreader;
 
+import android.app.AlarmManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
@@ -13,6 +15,7 @@ import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
+import android.os.SystemClock;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
@@ -22,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import app_utility.NetworkState;
+import app_utility.PowerReceiver;
 
 import static android.support.v4.app.NotificationCompat.PRIORITY_MAX;
 import static app_utility.StaticReferenceClass.sINVENTORYURL;
@@ -54,7 +58,7 @@ public class RFIDReadService extends Service {
         super.onCreate();
         refOfService = this;
         networkState = new NetworkState();
-        intentFilterData = new IntentFilter("com.scanner.broadcast");
+        /*intentFilterData = new IntentFilter("com.scanner.broadcast");
         broadcastReceiverData = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -64,7 +68,12 @@ public class RFIDReadService extends Service {
                 //testWithAlDataBase(alBeaconInfo);
             }
         };
-        getApplicationContext().registerReceiver(broadcastReceiverData, intentFilterData);
+        getApplicationContext().registerReceiver(broadcastReceiverData, intentFilterData);*/
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+        //intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
+        BroadcastReceiver mReceiver = new PowerReceiver();
+        registerReceiver(mReceiver, intentFilter);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForeground();
         }
@@ -78,7 +87,7 @@ public class RFIDReadService extends Service {
         clipboard.addPrimaryClipChangedListener( new ClipboardManager.OnPrimaryClipChangedListener() {
             public void onPrimaryClipChanged() {
                 ClipData clip = clipboard.getPrimaryClip();
-                CharSequence a = null;
+                CharSequence a;
                 String sMsg;
                 String URL;
                 if(stockFlag==0) {
@@ -175,6 +184,21 @@ public class RFIDReadService extends Service {
         startService(in);
     }
 
+    @Override
+    public void onTaskRemoved(Intent rootIntent) {
+        Intent restartServiceIntent = new Intent(getApplicationContext(), this.getClass());
+        restartServiceIntent.setPackage(getPackageName());
+
+        PendingIntent restartServicePendingIntent = PendingIntent.getService(getApplicationContext(), 1, restartServiceIntent, PendingIntent.FLAG_ONE_SHOT);
+        AlarmManager alarmService = (AlarmManager) getApplicationContext().getSystemService(Context.ALARM_SERVICE);
+        alarmService.set(
+                AlarmManager.ELAPSED_REALTIME,
+                SystemClock.elapsedRealtime() + 1000,
+                restartServicePendingIntent);
+
+        super.onTaskRemoved(rootIntent);
+    }
+
     private void notifyUser(String sRFID) {
         inboxStyle = new NotificationCompat.InboxStyle();
         notifyMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
@@ -195,4 +219,6 @@ public class RFIDReadService extends Service {
         int notificationId = 515;
         notifyMgr.notify(notificationId, nBuilder.build());
     }
+
+
 }
