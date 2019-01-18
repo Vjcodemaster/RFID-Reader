@@ -24,7 +24,6 @@ import java.util.HashMap;
 
 import app_utility.OnServiceInterface;
 import app_utility.PowerReceiver;
-import app_utility.SharedPreferenceClass;
 import app_utility.StringUtils;
 
 import static app_utility.StaticReferenceClass.sINVENTORYURL;
@@ -38,11 +37,13 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     Switch aSwitch;
     Handler handler;
     RFIDWithUHF mReader;
+    private int nFlagSize;
     private static int stockFlag;
     private boolean isInitialized = false;
     private ArrayList<HashMap<String, String>> tagList;
     private boolean loopFlag = false;
     private HashMap<String, String> map;
+    TextView tvTotalRFIDs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -89,6 +90,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
 
         tvRFID = findViewById(R.id.tv_rfid);
         tvStatus = findViewById(R.id.tv_status);
+        tvTotalRFIDs = findViewById(R.id.tv_total_rfids);
         aSwitch = findViewById(R.id.swtich_stock);
 
         onServiceInterface = this;
@@ -129,10 +131,13 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                 }*/
 
 
-                if(!loopFlag)
+                if(!loopFlag) {
+                    nFlagSize = 0;
                     readTags();
-                else
+                }
+                else {
                     stopScan();
+                }
             }
             return true;
         }
@@ -159,6 +164,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
             //setViewEnabled(true);
             mReader.stopInventory();
             sendDataToServer();
+            tvRFID.setText("");
             /*if (mContext.mReader.stopInventory()) {
                 //BtInventory.setText(mContext.getString(R.string.btInventory));
             }*/ /*else {
@@ -252,9 +258,22 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
 
             }
 
+            if(tagList.size()>nFlagSize) {
+                //String sb = tvRFID.getText() + System.getProperty("line.separator") + map.get("tagUii");
+                if(nFlagSize==0){
+                    tvRFID.setText("");
+                }
+                String sb = tvRFID.getText() + System.getProperty("line.separator") + map.get("tagUii").substring(4);
+
+                tvRFID.setText(sb);
+                tvTotalRFIDs.setText(String.valueOf(tagList.size()));
+            }
+
+
             //adapter.notifyDataSetChanged();
 
         }
+        nFlagSize = tagList.size();
     }
 
     public int checkIsExist(String strEPC) {
