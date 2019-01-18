@@ -1,7 +1,9 @@
 package com.autochip.rfidreader;
 
 import android.app.ProgressDialog;
+import android.content.BroadcastReceiver;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,6 +23,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import app_utility.OnServiceInterface;
+import app_utility.PowerReceiver;
 import app_utility.SharedPreferenceClass;
 import app_utility.StringUtils;
 
@@ -46,7 +49,10 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         tagList = new ArrayList<>();
-
+        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+        //intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
+        BroadcastReceiver mReceiver = new PowerReceiver();
+        registerReceiver(mReceiver, intentFilter);
 
         /*Intent in = new Intent(MainActivity.this, RFIDDService.class);
         startService(in);*/
@@ -176,16 +182,16 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         HashMap<String, String> params = new HashMap<>();
         //ArrayList<String> alTmp = new ArrayList<>();
         //alTmp.add(a.toString());
-        params.put("db", "Trufrost-Live"); //Trufrost-Testing
+        params.put("db", "Trufrost-Latest"); //Trufrost-Testing
         params.put("user", "admin");
-        params.put("password", "autochip@505");
+        params.put("password", "a"); //autochip@505
         //String text = a.toString();
         //String sRFID = text.substring(0, a.length() - 2);
         HashMap<String, String> hm;
         ArrayList<String> alRFIDs = new ArrayList<>();
         for(int i=0;i<tagList.size();i++){
             hm = new HashMap<>(tagList.get(i));
-            alRFIDs.add(hm.get("tagUii").substring(3));
+            alRFIDs.add(hm.get("tagUii").substring(4));
         }
         String sRFID = android.text.TextUtils.join(",", alRFIDs);
         params.put("rfids", sRFID);
