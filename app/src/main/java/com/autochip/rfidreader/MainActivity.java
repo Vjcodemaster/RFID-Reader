@@ -19,6 +19,9 @@ import android.widget.Toast;
 
 import com.rscja.deviceapi.RFIDWithUHF;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -42,13 +45,13 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     private boolean isInitialized = false;
     private ArrayList<HashMap<String, String>> tagList;
     private boolean loopFlag = false;
-    private HashMap<String, String> map;
     TextView tvTotalRFIDs;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        onServiceInterface = this;
         tagList = new ArrayList<>();
         IntentFilter intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
         //intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
@@ -93,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         tvTotalRFIDs = findViewById(R.id.tv_total_rfids);
         aSwitch = findViewById(R.id.swtich_stock);
 
-        onServiceInterface = this;
+
         /*Intent in = new Intent(MainActivity.this, RFIDReadService.class);
         startService(in);*/
 
@@ -149,6 +152,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
 
 
         if (mReader.startInventoryTag(0, 0)) {
+            tvStatus.setText("");
             /*BtInventory.setText(mContext
                     .getString(R.string.title_stop_Inventory));*/
             loopFlag = true;
@@ -185,24 +189,48 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
             sMsg = "true";
             URL = sINVENTORYURL;
         }
-        HashMap<String, String> params = new HashMap<>();
+
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("db", "Trufrost-server1"); //Trufrost-Testing
+            jsonObject.put("user", "admin");
+            jsonObject.put("password", "a");
+
+
+            HashMap<String, String> hm;
+            ArrayList<String> alRFIDs = new ArrayList<>();
+            for(int i=0;i<tagList.size();i++){
+                hm = new HashMap<>(tagList.get(i));
+                alRFIDs.add(hm.get("tagUii").substring(4));
+            }
+            //jsonInner.put("tagUii", alRFIDs);
+            JSONArray jsonArray = new JSONArray(alRFIDs);
+            //jsonArray.put(alRFIDs);
+            jsonObject.put("rfids", jsonArray);
+            jsonObject.put("start_inventory", sMsg);
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        /*HashMap<String, String> params = new HashMap<>();
         //ArrayList<String> alTmp = new ArrayList<>();
         //alTmp.add(a.toString());
-        params.put("db", "Trufrost-Latest"); //Trufrost-Testing
+        params.put("db", "Trufrost-server1"); //Trufrost-Testing
         params.put("user", "admin");
         params.put("password", "a"); //autochip@505
         //String text = a.toString();
         //String sRFID = text.substring(0, a.length() - 2);
         HashMap<String, String> hm;
         ArrayList<String> alRFIDs = new ArrayList<>();
+
         for(int i=0;i<tagList.size();i++){
             hm = new HashMap<>(tagList.get(i));
             alRFIDs.add(hm.get("tagUii").substring(4));
         }
         String sRFID = android.text.TextUtils.join(",", alRFIDs);
         params.put("rfids", sRFID);
-        params.put("start_inventory", sMsg);
-        VolleyTask volleyTask = new VolleyTask(getApplicationContext(), params, "PUSH_RFID", stockFlag, URL);
+        params.put("start_inventory", sMsg);*/
+        VolleyTask volleyTask = new VolleyTask(getApplicationContext(), jsonObject, "PUSH_RFID", stockFlag, URL);
+        tagList = new ArrayList<>();
         //sPreviousRFID = a.toString();
     }
 
@@ -236,7 +264,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         if (!TextUtils.isEmpty(epc)) {
             int index = checkIsExist(epc);
 
-            map = new HashMap<>();
+            HashMap<String, String> map = new HashMap<>();
 
             map.put("tagUii", epc);
             map.put("tagCount", String.valueOf(1));
@@ -294,7 +322,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         return existFlag;
     }
 
-    public class InitTask extends AsyncTask<String, Integer, Boolean> {
+     class InitTask extends AsyncTask<String, Integer, Boolean> {
         ProgressDialog mypDialog;
 
         @Override
@@ -335,7 +363,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     public void onServiceCall(String sCase, String sMSG, String sSubmitStatus) {
         switch (sCase) {
             case "RFID":
-                tvRFID.setText(sMSG);
+                //tvRFID.setText(sMSG);
                 tvStatus.setText(sSubmitStatus);
                 break;
         }

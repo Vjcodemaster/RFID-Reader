@@ -19,7 +19,6 @@ import java.util.HashMap;
 
 import app_utility.ApplicationController;
 
-import static app_utility.StaticReferenceClass.sRFIDURL;
 import static com.autochip.rfidreader.MainActivity.onServiceInterface;
 import static com.autochip.rfidreader.RFIDReadService.isAlreadyInProgress;
 
@@ -33,6 +32,15 @@ public class VolleyTask {
     String msg;
     int stockFlag;
     String URL;
+    JSONObject jsonObject = new JSONObject();
+
+    public VolleyTask(Context context, JSONObject jsonObject, String sCase, int stockFlag,String URL) {
+        this.context = context;
+        this.jsonObject = jsonObject;
+        this.stockFlag = stockFlag;
+        this.URL = URL;
+        Volley(sCase);
+    }
 
     public VolleyTask(Context context, HashMap<String, String> params, String sCase, int stockFlag,String URL) {
         this.context = context;
@@ -85,7 +93,8 @@ public class VolleyTask {
 
             @Override
             public byte[] getBody() throws AuthFailureError {
-                return new JSONObject(params).toString().getBytes();
+                //return new JSONObject(params).toString().getBytes();
+                return jsonObject.toString().getBytes();
             }
 
             @Override
@@ -130,16 +139,23 @@ public class VolleyTask {
                 } catch (JSONException e) {
                     e.printStackTrace();
                     msg = "Unable to reach server, please try again";
-                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                    sendMsgToActivity();
+                    /*try {
+                        onServiceInterface.onServiceCall("RFID", String.valueOf(this.jsonObject.get("rfids")), msg);
+                    } catch (JSONException e1) {
+                        e1.printStackTrace();
+                    }*/
                 }
                 if(sResponseCode == 200) {
                     //msg = "Success";
                     if (onServiceInterface != null) {
-                        onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                        sendMsgToActivity();
+                        //onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
                     } else {
                         Intent in = new Intent(context, MainActivity.class);
                         context.startActivity(in);
-                        onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                        sendMsgToActivity();
+                        //onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
                     }
                     //Toast.makeText(context, "RFID : " + params.get("rfids") + msg, Toast.LENGTH_LONG).show();
                     for (int i=0; i<2; i++){
@@ -149,11 +165,13 @@ public class VolleyTask {
                 } else if(sResponseCode == 300){
                     //msg = "RFID Doesn't exist";
                     if(onServiceInterface!=null){
-                        onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                        //onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                        sendMsgToActivity();
                     } else {
                         Intent in = new Intent(context, MainActivity.class);
                         context.startActivity(in);
-                        onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                        sendMsgToActivity();
+                        //onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
                     }
                     //Toast.makeText(context, "RFID : " + params.get("rfids") + msg, Toast.LENGTH_LONG).show();
                     for (int i=0; i<2; i++){
@@ -222,5 +240,13 @@ public class VolleyTask {
         /*if (circularProgressBar != null && circularProgressBar.isShowing()) {
             circularProgressBar.dismiss();
         }*/
+    }
+
+    private void sendMsgToActivity(){
+        try {
+            onServiceInterface.onServiceCall("RFID", String.valueOf(this.jsonObject.get("rfids")), msg);
+        } catch (JSONException e1) {
+            e1.printStackTrace();
+        }
     }
 }
