@@ -96,7 +96,6 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         tvTotalRFIDs = findViewById(R.id.tv_total_rfids);
         aSwitch = findViewById(R.id.swtich_stock);
 
-
         /*Intent in = new Intent(MainActivity.this, RFIDReadService.class);
         startService(in);*/
 
@@ -194,7 +193,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         try {
             jsonObject.put("db", "Trufrost-server1"); //Trufrost-Testing
             jsonObject.put("user", "admin");
-            jsonObject.put("password", "a");
+            jsonObject.put("password", "autochip@505");
 
 
             HashMap<String, String> hm;
@@ -364,6 +363,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         switch (sCase) {
             case "RFID":
                 //tvRFID.setText(sMSG);
+                tvTotalRFIDs.setText("");
                 tvStatus.setText(sSubmitStatus);
                 break;
         }

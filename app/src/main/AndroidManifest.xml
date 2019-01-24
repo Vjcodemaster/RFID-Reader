@@ -16,11 +16,11 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".MainActivity">
-            <intent-filter>
+            <!--<intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+            </intent-filter>-->
         </activity>
 
         <service
@@ -36,9 +36,17 @@
                 <category android:name="android.intent.category.DEFAULT" />
 
                 <action android:name="android.intent.action.SCREEN_ON" />
-                <action android:name="app_utility.RFIDDService"/>
+                <action android:name="app_utility.RFIDDService" />
             </intent-filter>
         </receiver>
+
+        <activity android:name=".LoginActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
