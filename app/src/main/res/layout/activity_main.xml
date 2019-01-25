@@ -17,7 +17,7 @@
         android:textStyle="bold"
         android:textAppearance="@android:style/TextAppearance.Medium"
         android:gravity="center"
-        android:textColor="@android:color/white"
+        android:textColor="@color/colorPrimaryDark"
         android:background="@color/colorPrimary"
         android:layout_gravity="center|top"
         android:layout_height="wrap_content" />
@@ -42,8 +42,26 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:switchPadding="8dp"
+                android:textAppearance="@android:style/TextAppearance.Medium"
                 android:text="Start Physical Stock Count" />
 
+            <Switch
+                android:id="@+id/switch_delivery_order"
+                android:layout_marginTop="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@android:style/TextAppearance.Medium"
+                android:switchPadding="8dp"
+                android:text="Delivery Order " />
+
+            <AutoCompleteTextView
+                android:hint="Type for order number"
+                android:id="@+id/actv_delivery_order_no"
+                android:layout_width="match_parent"
+                android:layout_marginEnd="40dp"
+                android:visibility="gone"
+                android:layout_marginStart="40dp"
+                android:layout_height="wrap_content" />
             <TextView
                 android:id="@+id/tv_rfid"
                 android:layout_marginTop="10dp"

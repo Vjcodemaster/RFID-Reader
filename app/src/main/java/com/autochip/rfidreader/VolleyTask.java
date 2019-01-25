@@ -209,11 +209,11 @@ public class VolleyTask {
             case 300: //RFID not exist
                 msg = "RFID Doesn't exist";
                 if(onServiceInterface!=null){
-                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg, null, null);
                 } else {
                     Intent in = new Intent(context, MainActivity.class);
                     context.startActivity(in);
-                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg, null, null);
                 }
                 Toast.makeText(context, "RFID : " + params.get("rfids") + " Doesn't exist", Toast.LENGTH_LONG).show();
                 break;
@@ -229,11 +229,11 @@ public class VolleyTask {
             case 400:
                 msg = "Failed to Submit, please check if server is available";
                 if(onServiceInterface!=null){
-                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg, null, null);
                 } else {
                     Intent in = new Intent(context, MainActivity.class);
                     context.startActivity(in);
-                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
+                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg, null, null);
                 }
                 break;
         }
@@ -244,7 +244,7 @@ public class VolleyTask {
 
     private void sendMsgToActivity(){
         try {
-            onServiceInterface.onServiceCall("RFID", String.valueOf(this.jsonObject.get("rfids")), msg);
+            onServiceInterface.onServiceCall("RFID", String.valueOf(this.jsonObject.get("rfids")), msg, null, null);
         } catch (JSONException e1) {
             e1.printStackTrace();
         }

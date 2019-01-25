@@ -3,12 +3,6 @@ package app_utility;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
-
 public class SharedPreferenceClass {
 
     private SharedPreferences sharedPreferences;
@@ -20,7 +14,7 @@ public class SharedPreferenceClass {
 
     private static final String IS_LOGGED_IN = "IS_LOGGED_IN";
 
-    private static final String IS_INITIALIZED = "IS_INITIALIZED";
+    private static final String COMPANY_NAME = "COMPANY_NAME";
 
 
 
@@ -33,12 +27,16 @@ public class SharedPreferenceClass {
         editor.apply();
     }
 
-    public void setIfUserIsTraceable(boolean isTraceable){
+    public void setCompanyPreference(String value){
         SharedPreferences sharedPreferences = _context.getSharedPreferences(APP_PREFERENCES, PRIVATE_MODE);
         SharedPreferences.Editor editor;
         editor = sharedPreferences.edit();
-        editor.putBoolean(IS_INITIALIZED, isTraceable);
+        editor.putString(COMPANY_NAME, value);
         editor.apply();
+    }
+
+    public String getCompanyName(){
+        return sharedPreferences.getString(COMPANY_NAME, "");
     }
 
     /*public void setIsStartInventory(){

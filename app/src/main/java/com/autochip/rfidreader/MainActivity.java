@@ -1,7 +1,9 @@
 package com.autochip.rfidreader;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.AsyncTask;
@@ -12,7 +14,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.CompoundButton;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -27,6 +37,7 @@ import java.util.HashMap;
 
 import app_utility.OnServiceInterface;
 import app_utility.PowerReceiver;
+import app_utility.RFIDAsyncTask;
 import app_utility.StringUtils;
 
 import static app_utility.StaticReferenceClass.sINVENTORYURL;
@@ -37,15 +48,22 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     public static OnServiceInterface onServiceInterface;
     TextView tvRFID;
     TextView tvStatus;
-    Switch aSwitch;
+    Switch aSwitch, switchDelivery;
     Handler handler;
     RFIDWithUHF mReader;
+
+    filterAdapter listAdapter;
+
     private int nFlagSize;
     private static int stockFlag;
     private boolean isInitialized = false;
     private ArrayList<HashMap<String, String>> tagList;
     private boolean loopFlag = false;
     TextView tvTotalRFIDs;
+    ArrayList<String> alDeliveryOrderNumber = new ArrayList<>();
+    AutoCompleteTextView textView;
+
+    ArrayAdapter<String> adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,6 +76,8 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         BroadcastReceiver mReceiver = new PowerReceiver();
         registerReceiver(mReceiver, intentFilter);
 
+        RFIDAsyncTask RFIDAsyncTask = new RFIDAsyncTask(MainActivity.this);
+        RFIDAsyncTask.execute(String.valueOf(2));
         /*Intent in = new Intent(MainActivity.this, RFIDDService.class);
         startService(in);*/
         //SharedPreferenceClass sharedPreferenceClass = new SharedPreferenceClass(MainActivity.this);
@@ -96,22 +116,63 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         tvTotalRFIDs = findViewById(R.id.tv_total_rfids);
         aSwitch = findViewById(R.id.swtich_stock);
 
+        switchDelivery = findViewById(R.id.switch_delivery_order);
+        textView = findViewById(R.id.actv_delivery_order_no);
+
         /*Intent in = new Intent(MainActivity.this, RFIDReadService.class);
         startService(in);*/
+
+        switchDelivery.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked){
+                    aSwitch.setClickable(false);
+                    textView.setVisibility(View.VISIBLE);
+
+                } else {
+                    aSwitch.setClickable(true);
+                    textView.setVisibility(View.GONE);
+                    hideKeyboard(buttonView);
+                }
+            }
+        });
 
         aSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if (b) {
-                    RFIDReadService.stockFlag = 1;
+                    stockFlag = 1;
+                    switchDelivery.setClickable(false);
                     Log.e("stockflag", " " + 1);
                 } else {
-                    RFIDReadService.stockFlag = 0;
+                    stockFlag = 0;
+                    switchDelivery.setClickable(true);
                     Log.e("stockflag", " " + 0);
                 }
             }
         });
+
+        /*final String[] COUNTRIES = new String[] {
+                "ASDGW23234324322", "WGVCC23234324322", "TPQPA23234324322", "LOLVL23234324322", "PYNGH23234324322"
+        };*/
+
+
+        textView.setOnTouchListener(new View.OnTouchListener() {
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                textView.showDropDown();
+                return false;
+            }
+        });
     }
+    public void hideKeyboard(View view) {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+
+
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -359,13 +420,120 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     }
 
     @Override
-    public void onServiceCall(String sCase, String sMSG, String sSubmitStatus) {
+    public void onServiceCall(String sCase, String sMSG, String sSubmitStatus, ArrayList<Integer> alID, ArrayList<String> alName) {
         switch (sCase) {
             case "RFID":
                 //tvRFID.setText(sMSG);
                 tvTotalRFIDs.setText("");
                 tvStatus.setText(sSubmitStatus);
                 break;
+            case "SUCCESS":
+                this.alDeliveryOrderNumber = alName;
+                //listAdapter = new filterAdapter(MainActivity.this, android.R.layout.simple_dropdown_item_1line,ArrayListitem);
+                adapter = new ArrayAdapter<>(this,
+                        android.R.layout.simple_dropdown_item_1line, alDeliveryOrderNumber);
+
+                textView.setAdapter(adapter);
+                break;
         }
+    }
+
+    public class filterAdapter extends ArrayAdapter<String> implements Filterable {
+
+        ArrayList<String> originalList;
+        ArrayList<String> filteredList;
+
+        public filterAdapter(Context context, int textViewResourceId, ArrayList<String> item) {
+            super(context, textViewResourceId, item);
+            filteredList = item;
+            originalList = new ArrayList<String>(filteredList);
+        }
+        @Override
+        public int getCount() {
+            return filteredList.size();
+        }
+
+        @Override
+        public String getItem(int position) {
+            return filteredList.get(position);
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            super.getView(position, convertView, parent);
+            TextView tv;
+
+            if(convertView!= null)
+                tv = (TextView)convertView;
+            else
+                tv = new TextView(MainActivity.this);
+
+            //changing text size and adding icons to sightseer and destination heading
+            /*if(position == 0)
+            {
+                tv.setText(filteredList.get(position));
+                tv.setTextSize(autoCompleteTextView.getTextSize() - 1);
+                Drawable drawable = ContextCompat.getDrawable(getApplicationContext(),R.drawable.cognito);
+                tv.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, drawable, null);
+                tv.setTextColor(Color.parseColor("#999999"));
+            }
+            else if(filteredList.get(position).contains("Destination"))
+            {
+                tv.setText(filteredList.get(position));
+                tv.setTextSize(autoCompleteTextView.getTextSize() - 1);
+                Drawable drawable = ContextCompat.getDrawable(getApplicationContext(),R.drawable.favicon);
+                tv.setCompoundDrawablesRelativeWithIntrinsicBounds(null, null, drawable, null);
+                tv.setTextColor(Color.parseColor("#999999"));
+            }
+            else{
+                tv.setText(filteredList.get(position));
+                tv.setTextSize(autoCompleteTextView.getTextSize() - 5);
+            }*/
+            return tv;
+        }
+        @Override
+        public Filter getFilter() {
+            return filter;
+        }
+        @Override    //disabling the selection of 0 position of array's
+        public boolean isEnabled(int position) {
+            if(position == 0 || filteredList.get(position).contains("Destination"))
+                return false;
+            else
+                return super.isEnabled(position);
+        }
+
+        private Filter filter = new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                //constraint stores whatever the user type in autotextview
+                if(constraint.length()>2){
+                    filteredList.clear();
+                    FilterResults filterResults = new FilterResults();
+                    if (constraint != null) {
+                        for(int i = 0;i<originalList.size();i++)
+                        {
+
+                            if(originalList.get(i).startsWith(constraint.toString())){
+                                filteredList.add(originalList.get(i));
+                            }
+                        }
+                        // Retrieve the autocomplete results.
+                        filterResults.values = filteredList;
+                        filterResults.count = filteredList.size();
+                    }
+                    return filterResults;
+                }
+                else
+                    return null;
+            }
+
+            @Override
+            protected void publishResults(CharSequence contraint, FilterResults results) {
+                if (results != null && results.count > 0) {
+                    notifyDataSetChanged();
+                }
+            }
+        };
     }
 }

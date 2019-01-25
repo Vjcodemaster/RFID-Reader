@@ -11,6 +11,10 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.util.Base64;
 
+import com.autochip.rfidreader.LoginActivity;
+import com.autochip.rfidreader.MainActivity;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -26,12 +30,16 @@ public class RFIDAsyncTask extends AsyncTask<String, Void, String> {
     @SuppressLint("StaticFieldLeak")
     private String res = "";
     private int createdId = -1;
-    private static int createUID = 0;
+    private static int createUID = 2;
     private Boolean isConnected = false;
     private String sMsgResult;
     private int type;
     private Context context;
     private HashMap<String, Object> object = new HashMap<>();
+    ArrayList<Integer> alID = new ArrayList<>();
+    ArrayList<String> alName = new ArrayList<>();
+    ArrayList<String> alDeliveryOrderNumber = new ArrayList<>();
+
 
 
     //private ArrayList<String[]> alInsuranceHistory = new ArrayList<>();
@@ -54,7 +62,10 @@ public class RFIDAsyncTask extends AsyncTask<String, Void, String> {
         type = Integer.parseInt(params[0]);
         switch (type) {
             case 1:
-                readTask();
+                readCompanyTask();
+                break;
+            case 2:
+                readDeliveryNumber();
                 break;
         }
         return res;
@@ -74,10 +85,16 @@ public class RFIDAsyncTask extends AsyncTask<String, Void, String> {
         }
         switch (type) {
             case 1:
+                alName.add(0, "Select Company");
+                alID.add(0, 0);
+                LoginActivity.onServiceInterface.onServiceCall("SUCCESS", "", "", alID, alName);
                 /*if (isConnected) {
 
                 } else {
                 }*/
+                break;
+            case 2:
+                MainActivity.onServiceInterface.onServiceCall("SUCCESS", "", "", null, alDeliveryOrderNumber);
                 break;
         }
     }
@@ -85,14 +102,41 @@ public class RFIDAsyncTask extends AsyncTask<String, Void, String> {
     /*
     finds all the data created by this user and returns required fields, which searches for create_uid = 107 condition
      */
-    private void readTask() {
+    private void readCompanyTask() {
         OdooConnect oc = OdooConnect.connect(SERVER_URL, PORT_NO, DB_NAME, USER_ID, PASSWORD);
-        List<HashMap<String, Object>> data = oc.search_read("res.company", null, "id", "name");
+        List<HashMap<String, Object>> data = oc.search_read("res.company", new Object[]{
+                new Object[]{new Object[]{"id", "!=", 0}}}, "name");
 
         for (int i = 0; i < data.size(); ++i) {
 
-        }
+            alID.add(Integer.valueOf(data.get(i).get("id").toString()));
+            alName.add(String.valueOf(data.get(i).get("name").toString()));
 
+        }
+        //LoginActivity.onServiceInterface.onServiceCall("SUCCESS", "", "", alID, alName);
+    }
+
+    private void readDeliveryNumber() {
+        OdooConnect oc = OdooConnect.connect(SERVER_URL, PORT_NO, DB_NAME, USER_ID, PASSWORD);
+
+        Object[] conditions = new Object[2];
+        conditions[0] = new Object[]{"state", "=", "assigned"};
+        conditions[1] = new Object[]{"delivery_name", "=", "Gurugram Warehouse: Delivery Orders"};
+        //conditions[1] = new Object[]{"origin", "=", "Quot/TC/1819/00036"};
+        //conditions[1] = new Object[]{"picking_type_id", "=", "Gurugram Warehouse: Delivery Orders"};
+        List<HashMap<String, Object>> data = oc.search_read("stock.picking", new Object[]{conditions}, "name");
+
+        try {
+            for (int i = 0; i < data.size(); ++i) {
+
+                alDeliveryOrderNumber.add(String.valueOf(data.get(i).get("name").toString()));
+
+            }
+        }
+        catch (Exception e){
+            e.printStackTrace();
+        }
+        //LoginActivity.onServiceInterface.onServiceCall("SUCCESS", "", "", alID, alName);
     }
 
 
