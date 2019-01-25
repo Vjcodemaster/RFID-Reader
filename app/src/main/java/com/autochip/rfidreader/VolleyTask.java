@@ -12,9 +12,11 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import app_utility.ApplicationController;
@@ -30,6 +32,8 @@ public class VolleyTask {
     private HashMap<String, String> params;
     //private int position;
     String msg;
+
+    ArrayList<String> alData;
     int stockFlag;
     String URL;
     JSONObject jsonObject = new JSONObject();
@@ -136,6 +140,16 @@ public class VolleyTask {
                     jsonObject = new JSONObject(sResult);
                     sResponseCode = jsonObject.getInt("response_code");
                     msg = jsonObject.getString("message");
+                    JSONArray jsonArray = new JSONArray(msg);
+                    //JSONObject jsonObject1;
+                    alData = new ArrayList<>();
+                    for(int i=0; i<jsonArray.length(); i++){
+                        String product = jsonArray.getJSONObject(i).getString("product");
+                        String quantity = jsonArray.getJSONObject(i).getString("quantity_received");
+
+                        alData.add(product + " : " + quantity);
+                        //jsonObject1 = new JSONObject(jsonArray.getJSONObject(0).getJSONArray());
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
                     msg = "Unable to reach server, please try again";
@@ -158,9 +172,9 @@ public class VolleyTask {
                         //onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
                     }
                     //Toast.makeText(context, "RFID : " + params.get("rfids") + msg, Toast.LENGTH_LONG).show();
-                    for (int i=0; i<2; i++){
+                    /*for (int i=0; i<2; i++){
                         Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-                    }
+                    }*/
 
                 } else if(sResponseCode == 300){
                     //msg = "RFID Doesn't exist";
@@ -174,9 +188,9 @@ public class VolleyTask {
                         //onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
                     }
                     //Toast.makeText(context, "RFID : " + params.get("rfids") + msg, Toast.LENGTH_LONG).show();
-                    for (int i=0; i<2; i++){
+                    /*for (int i=0; i<2; i++){
                         Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-                    }
+                    }*/
                 }
                 /*JSONObject jsonObject;
                 PreferenceClass preferenceClass = new PreferenceClass(aActivity);
@@ -244,7 +258,7 @@ public class VolleyTask {
 
     private void sendMsgToActivity(){
         try {
-            onServiceInterface.onServiceCall("RFID", String.valueOf(this.jsonObject.get("rfids")), msg, null, null);
+            onServiceInterface.onServiceCall("RFID", String.valueOf(this.jsonObject.get("rfids")), msg, null, alData);
         } catch (JSONException e1) {
             e1.printStackTrace();
         }

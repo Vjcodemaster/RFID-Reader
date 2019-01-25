@@ -11,7 +11,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -34,6 +36,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Objects;
 
 import app_utility.OnServiceInterface;
 import app_utility.PowerReceiver;
@@ -118,6 +121,24 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
 
         switchDelivery = findViewById(R.id.switch_delivery_order);
         textView = findViewById(R.id.actv_delivery_order_no);
+        textView.setThreshold(1);
+
+        textView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
 
         /*Intent in = new Intent(MainActivity.this, RFIDReadService.class);
         startService(in);*/
@@ -425,14 +446,28 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
             case "RFID":
                 //tvRFID.setText(sMSG);
                 tvTotalRFIDs.setText("");
-                tvStatus.setText(sSubmitStatus);
+                /*StringBuilder sb = new StringBuilder();
+                String sPreviousString = "";
+                for(int i=0; i<alName.size();i++) {
+                    sb.append(sPreviousString).append(System.getProperty("line.separator")).append(alName.get(i));
+                    sPreviousString = alName.get(i);
+                }*/
+                String s = TextUtils.join(Objects.requireNonNull(System.getProperty("line.separator")), alName);
+                //tvRFID.setText(sb);
+                tvStatus.setText(s);
                 break;
             case "SUCCESS":
                 this.alDeliveryOrderNumber = alName;
-                //listAdapter = new filterAdapter(MainActivity.this, android.R.layout.simple_dropdown_item_1line,ArrayListitem);
+                /*alDeliveryOrderNumber.add("ASDA3242342");
+                alDeliveryOrderNumber.add("HYJGHJ21212");
+                alDeliveryOrderNumber.add("CVCVQW32333");
+                alDeliveryOrderNumber.add("KIPP632B2U9");*/
+
+                //listAdapter = new filterAdapter(MainActivity.this, android.R.layout.simple_dropdown_item_1line,alDeliveryOrderNumber);
                 adapter = new ArrayAdapter<>(this,
                         android.R.layout.simple_dropdown_item_1line, alDeliveryOrderNumber);
 
+                //textView.setAdapter(listAdapter);
                 textView.setAdapter(adapter);
                 break;
         }
@@ -458,7 +493,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
             return filteredList.get(position);
         }
 
-        @Override
+        /*@Override
         public View getView(int position, View convertView, ViewGroup parent) {
             super.getView(position, convertView, parent);
             TextView tv;
@@ -469,7 +504,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                 tv = new TextView(MainActivity.this);
 
             //changing text size and adding icons to sightseer and destination heading
-            /*if(position == 0)
+            *//*if(position == 0)
             {
                 tv.setText(filteredList.get(position));
                 tv.setTextSize(autoCompleteTextView.getTextSize() - 1);
@@ -488,44 +523,50 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
             else{
                 tv.setText(filteredList.get(position));
                 tv.setTextSize(autoCompleteTextView.getTextSize() - 5);
-            }*/
+            }*//*
             return tv;
-        }
+        }*/
         @Override
         public Filter getFilter() {
             return filter;
         }
-        @Override    //disabling the selection of 0 position of array's
+        /*@Override    //disabling the selection of 0 position of array's
         public boolean isEnabled(int position) {
-            if(position == 0 || filteredList.get(position).contains("Destination"))
+            *//*if(position == 0 || filteredList.get(position).contains("Destination"))
                 return false;
-            else
+            else*//*
                 return super.isEnabled(position);
-        }
+        }*/
 
         private Filter filter = new Filter() {
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
                 //constraint stores whatever the user type in autotextview
-                if(constraint.length()>2){
+                //if(constraint.length()>=1){
                     filteredList.clear();
                     FilterResults filterResults = new FilterResults();
                     if (constraint != null) {
                         for(int i = 0;i<originalList.size();i++)
                         {
 
-                            if(originalList.get(i).startsWith(constraint.toString())){
+                            if(originalList.get(i).contains(constraint.toString().toLowerCase()) || originalList.get(i).contains(constraint.toString().toUpperCase())){
                                 filteredList.add(originalList.get(i));
                             }
                         }
                         // Retrieve the autocomplete results.
                         filterResults.values = filteredList;
                         filterResults.count = filteredList.size();
+                        return filterResults;
+                    } else {
+                        filterResults.count = originalList.size();
+                        filterResults.values = originalList;
+                        textView.showDropDown();
+                        return filterResults;
                     }
-                    return filterResults;
-                }
+
+                /*}
                 else
-                    return null;
+                    return null;*/
             }
 
             @Override

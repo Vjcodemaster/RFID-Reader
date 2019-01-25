@@ -121,8 +121,8 @@ public class RFIDAsyncTask extends AsyncTask<String, Void, String> {
 
         Object[] conditions = new Object[2];
         conditions[0] = new Object[]{"state", "=", "assigned"};
-        conditions[1] = new Object[]{"delivery_name", "=", "Gurugram Warehouse: Delivery Orders"};
-        //conditions[1] = new Object[]{"origin", "=", "Quot/TC/1819/00036"};
+        //conditions[1] = new Object[]{"delivery_name", "=", "Gurugram Warehouse: Delivery Orders"};
+        conditions[1] = new Object[]{"origin", "=", "Quot/TC/1819/00036"};
         //conditions[1] = new Object[]{"picking_type_id", "=", "Gurugram Warehouse: Delivery Orders"};
         List<HashMap<String, Object>> data = oc.search_read("stock.picking", new Object[]{conditions}, "name");
 
