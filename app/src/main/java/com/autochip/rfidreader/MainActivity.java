@@ -28,7 +28,6 @@ import android.widget.CompoundButton;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -84,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main11);
+        setContentView(R.layout.activity_main);
         onServiceInterface = this;
         tagList = new ArrayList<>();
         intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
