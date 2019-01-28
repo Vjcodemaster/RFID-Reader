@@ -41,6 +41,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+import app_utility.CircularProgressBar;
 import app_utility.OnServiceInterface;
 import app_utility.PowerReceiver;
 import app_utility.StringUtils;
@@ -56,6 +57,8 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     Switch aSwitch, switchDelivery;
     Handler handler;
     RFIDWithUHF mReader;
+
+    private CircularProgressBar circularProgressBar;
 
     RecyclerView rvProducts;
     private ProductsRVAdapter productsRVAdapter;
@@ -81,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main11);
         onServiceInterface = this;
         tagList = new ArrayList<>();
         intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
@@ -347,6 +350,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         params.put("rfids", sRFID);
         params.put("start_inventory", sMsg);*/
         if(alRFIDs.size()>=1) {
+            setProgressBar();
             VolleyTask volleyTask = new VolleyTask(getApplicationContext(), jsonObject, "PUSH_RFID", stockFlag, URL);
             tagList = new ArrayList<>();
         } else {
@@ -481,9 +485,13 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     }
 
     @Override
-    public void onServiceCall(String sCase, String sMSG, String sSubmitStatus, ArrayList<Integer> alID, ArrayList<String> alName) {
+    public void onServiceCall(String sCase, int code, String sMSG, String sSubmitStatus, ArrayList<Integer> alID, ArrayList<String> alName) {
         switch (sCase) {
             case "RFID":
+                if(code==901){
+                    tvStatus.setText(sSubmitStatus);
+                    tvTotalRFIDs.setText("");
+                }
                 //tvRFID.setText(sMSG);
                 /*tvTotalRFIDs.setText("");
                 *//*StringBuilder sb = new StringBuilder();
@@ -496,12 +504,15 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                 //tvRFID.setText(sb);
                 tvStatus.setText(s);*/
 
-                productsRVAdapter = new ProductsRVAdapter(MainActivity.this, alName, alID);
-                rvProducts.setAdapter(productsRVAdapter);
-                //rlRVHeading.setVisibility(View.VISIBLE);
-                llRVParent.setVisibility(View.VISIBLE);
-                rvProducts.setVisibility(View.VISIBLE);
-                tvTotalRFIDs.setText("");
+                if(alName!=null && alName.size()>=1 && code==0) {
+                    productsRVAdapter = new ProductsRVAdapter(MainActivity.this, alName, alID);
+                    rvProducts.setAdapter(productsRVAdapter);
+                    //rlRVHeading.setVisibility(View.VISIBLE);
+                    llRVParent.setVisibility(View.VISIBLE);
+                    rvProducts.setVisibility(View.VISIBLE);
+                    tvTotalRFIDs.setText("");
+                    tvRFID.setText("");
+                }
                 break;
             case "SUCCESS":
                 this.alDeliveryOrderNumber = alName;
@@ -517,6 +528,9 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                 //textView.setAdapter(listAdapter);
                 textView.setAdapter(adapter);
                 break;
+        }
+        if (circularProgressBar != null && circularProgressBar.isShowing()) {
+            circularProgressBar.dismiss();
         }
     }
 
@@ -623,5 +637,12 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                 }
             }
         };
+    }
+
+    private void setProgressBar() {
+        circularProgressBar = new CircularProgressBar(MainActivity.this);
+        circularProgressBar.setCanceledOnTouchOutside(false);
+        circularProgressBar.setCancelable(false);
+        circularProgressBar.show();
     }
 }

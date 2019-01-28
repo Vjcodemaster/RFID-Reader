@@ -33,6 +33,8 @@ public class VolleyTask {
     //private int position;
     String msg;
 
+    private int ERROR_CODE = 0;
+
     ArrayList<String> alData;
     ArrayList<Integer> alID;
     int stockFlag;
@@ -108,7 +110,7 @@ public class VolleyTask {
             }
         };
         request.setRetryPolicy(new DefaultRetryPolicy(
-                5000,
+                6000,
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
         // add the request object to the queue to be executed
@@ -154,8 +156,10 @@ public class VolleyTask {
                         alID.add(Integer.valueOf(quantity));
                         //jsonObject1 = new JSONObject(jsonArray.getJSONObject(0).getJSONArray());
                     }
+
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    ERROR_CODE = 901;
                     msg = "Unable to reach server, please try again";
                     sendMsgToActivity();
                     /*try {
@@ -227,11 +231,11 @@ public class VolleyTask {
             case 300: //RFID not exist
                 msg = "RFID Doesn't exist";
                 if(onServiceInterface!=null){
-                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg, null, null);
+                    onServiceInterface.onServiceCall("RFID", 0, params.get("rfids"), msg, null, null);
                 } else {
                     Intent in = new Intent(context, MainActivity.class);
                     context.startActivity(in);
-                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg, null, null);
+                    onServiceInterface.onServiceCall("RFID", 0,params.get("rfids"), msg, null, null);
                 }
                 Toast.makeText(context, "RFID : " + params.get("rfids") + " Doesn't exist", Toast.LENGTH_LONG).show();
                 break;
@@ -247,11 +251,11 @@ public class VolleyTask {
             case 400:
                 msg = "Failed to Submit, please check if server is available";
                 if(onServiceInterface!=null){
-                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg, null, null);
+                    onServiceInterface.onServiceCall("RFID", 0, params.get("rfids"), msg, null, null);
                 } else {
                     Intent in = new Intent(context, MainActivity.class);
                     context.startActivity(in);
-                    onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg, null, null);
+                    onServiceInterface.onServiceCall("RFID", 0, params.get("rfids"), msg, null, null);
                 }
                 break;
         }
@@ -262,7 +266,7 @@ public class VolleyTask {
 
     private void sendMsgToActivity(){
         try {
-            onServiceInterface.onServiceCall("RFID", String.valueOf(this.jsonObject.get("rfids")), msg, alID, alData);
+            onServiceInterface.onServiceCall("RFID", ERROR_CODE, String.valueOf(this.jsonObject.get("rfids")), msg, alID, alData);
         } catch (JSONException e1) {
             e1.printStackTrace();
         }

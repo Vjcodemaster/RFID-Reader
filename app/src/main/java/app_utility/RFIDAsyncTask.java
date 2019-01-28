@@ -87,14 +87,14 @@ public class RFIDAsyncTask extends AsyncTask<String, Void, String> {
             case 1:
                 alName.add(0, "Select Company");
                 alID.add(0, 0);
-                LoginActivity.onServiceInterface.onServiceCall("SUCCESS", "", "", alID, alName);
+                LoginActivity.onServiceInterface.onServiceCall("SUCCESS", 0,"", "", alID, alName);
                 /*if (isConnected) {
 
                 } else {
                 }*/
                 break;
             case 2:
-                MainActivity.onServiceInterface.onServiceCall("SUCCESS", "", "", null, alDeliveryOrderNumber);
+                MainActivity.onServiceInterface.onServiceCall("SUCCESS", 0,"", "", null, alDeliveryOrderNumber);
                 break;
         }
     }

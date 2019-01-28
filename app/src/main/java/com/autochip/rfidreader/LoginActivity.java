@@ -101,7 +101,7 @@ public class LoginActivity extends AppCompatActivity implements OnServiceInterfa
     }
 
     @Override
-    public void onServiceCall(String sCase, String sMSG, String sSubmitStatus, ArrayList<Integer> alID, ArrayList<String> alName) {
+    public void onServiceCall(String sCase, int code, String sMSG, String sSubmitStatus, ArrayList<Integer> alID, ArrayList<String> alName) {
         switch (sCase) {
             case "SUCCESS":
                 this.alID = alID;
