@@ -34,6 +34,7 @@ public class VolleyTask {
     String msg;
 
     ArrayList<String> alData;
+    ArrayList<Integer> alID;
     int stockFlag;
     String URL;
     JSONObject jsonObject = new JSONObject();
@@ -143,11 +144,14 @@ public class VolleyTask {
                     JSONArray jsonArray = new JSONArray(msg);
                     //JSONObject jsonObject1;
                     alData = new ArrayList<>();
+                    alID =  new ArrayList<>();
                     for(int i=0; i<jsonArray.length(); i++){
                         String product = jsonArray.getJSONObject(i).getString("product");
                         String quantity = jsonArray.getJSONObject(i).getString("quantity_received");
 
-                        alData.add(product + " : " + quantity);
+                        //alData.add(product + " : " + quantity);
+                        alData.add(product);
+                        alID.add(Integer.valueOf(quantity));
                         //jsonObject1 = new JSONObject(jsonArray.getJSONObject(0).getJSONArray());
                     }
                 } catch (JSONException e) {
@@ -258,7 +262,7 @@ public class VolleyTask {
 
     private void sendMsgToActivity(){
         try {
-            onServiceInterface.onServiceCall("RFID", String.valueOf(this.jsonObject.get("rfids")), msg, null, alData);
+            onServiceInterface.onServiceCall("RFID", String.valueOf(this.jsonObject.get("rfids")), msg, alID, alData);
         } catch (JSONException e1) {
             e1.printStackTrace();
         }

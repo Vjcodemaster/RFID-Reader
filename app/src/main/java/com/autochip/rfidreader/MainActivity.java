@@ -11,6 +11,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -18,13 +21,14 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.CompoundButton;
 import android.widget.Filter;
 import android.widget.Filterable;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,11 +40,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Objects;
 
 import app_utility.OnServiceInterface;
 import app_utility.PowerReceiver;
-import app_utility.RFIDAsyncTask;
 import app_utility.StringUtils;
 
 import static app_utility.StaticReferenceClass.sINVENTORYURL;
@@ -55,6 +57,9 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     Handler handler;
     RFIDWithUHF mReader;
 
+    RecyclerView rvProducts;
+    private ProductsRVAdapter productsRVAdapter;
+
     filterAdapter listAdapter;
 
     private int nFlagSize;
@@ -65,8 +70,13 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     TextView tvTotalRFIDs;
     ArrayList<String> alDeliveryOrderNumber = new ArrayList<>();
     AutoCompleteTextView textView;
+    //RelativeLayout rlRVHeading;
+    LinearLayout llRVParent;
 
     ArrayAdapter<String> adapter;
+
+    IntentFilter intentFilter;
+    BroadcastReceiver mReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,13 +84,23 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         setContentView(R.layout.activity_main);
         onServiceInterface = this;
         tagList = new ArrayList<>();
-        IntentFilter intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+        intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
         //intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
-        BroadcastReceiver mReceiver = new PowerReceiver();
+        mReceiver = new PowerReceiver();
         registerReceiver(mReceiver, intentFilter);
 
-        RFIDAsyncTask RFIDAsyncTask = new RFIDAsyncTask(MainActivity.this);
-        RFIDAsyncTask.execute(String.valueOf(2));
+        rvProducts = findViewById(R.id.rv_products);
+        //productsRVAdapter = new ProductsRVAdapter(MainActivity.this);
+        LinearLayoutManager mLinearLayoutManager = new LinearLayoutManager(MainActivity.this);
+        mLinearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        rvProducts.setLayoutManager(mLinearLayoutManager);
+        rvProducts.addItemDecoration(new DividerItemDecoration(MainActivity.this, DividerItemDecoration.VERTICAL));
+        rvProducts.setHasFixedSize(true);
+
+        //productsRVAdapter = new ProductsRVAdapter(MainActivity.this);
+        //rvProducts.setAdapter(productsRVAdapter);
+        /*RFIDAsyncTask RFIDAsyncTask = new RFIDAsyncTask(MainActivity.this);
+        RFIDAsyncTask.execute(String.valueOf(2));*/
         /*Intent in = new Intent(MainActivity.this, RFIDDService.class);
         startService(in);*/
         //SharedPreferenceClass sharedPreferenceClass = new SharedPreferenceClass(MainActivity.this);
@@ -118,6 +138,8 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         tvStatus = findViewById(R.id.tv_status);
         tvTotalRFIDs = findViewById(R.id.tv_total_rfids);
         aSwitch = findViewById(R.id.swtich_stock);
+        //rlRVHeading = findViewById(R.id.rl_rv_heading);
+        llRVParent = findViewById(R.id.ll_rv_parent);
 
         switchDelivery = findViewById(R.id.switch_delivery_order);
         textView = findViewById(R.id.actv_delivery_order_no);
@@ -193,7 +215,18 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     }
 
 
-
+    @Override
+    public void onStop(){
+         /*
+        unregistering receivers to avoid memory leak
+         */
+        if (mReceiver != null) {
+            unregisterReceiver(mReceiver);
+            mReceiver = null;
+        }
+        mReader.free();
+        super.onStop();
+    }
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -218,6 +251,9 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                 if(!loopFlag) {
                     nFlagSize = 0;
                     readTags();
+                    //rlRVHeading.setVisibility(View.GONE);
+                    llRVParent.setVisibility(View.GONE);
+                    rvProducts.setVisibility(View.GONE);
                 }
                 else {
                     stopScan();
@@ -270,7 +306,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
             sMsg = "true";
             URL = sINVENTORYURL;
         }
-
+        ArrayList<String> alRFIDs = new ArrayList<>();
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("db", "Trufrost-server1"); //Trufrost-Testing
@@ -279,7 +315,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
 
 
             HashMap<String, String> hm;
-            ArrayList<String> alRFIDs = new ArrayList<>();
+
             for(int i=0;i<tagList.size();i++){
                 hm = new HashMap<>(tagList.get(i));
                 alRFIDs.add(hm.get("tagUii").substring(4));
@@ -310,8 +346,12 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         String sRFID = android.text.TextUtils.join(",", alRFIDs);
         params.put("rfids", sRFID);
         params.put("start_inventory", sMsg);*/
-        VolleyTask volleyTask = new VolleyTask(getApplicationContext(), jsonObject, "PUSH_RFID", stockFlag, URL);
-        tagList = new ArrayList<>();
+        if(alRFIDs.size()>=1) {
+            VolleyTask volleyTask = new VolleyTask(getApplicationContext(), jsonObject, "PUSH_RFID", stockFlag, URL);
+            tagList = new ArrayList<>();
+        } else {
+            Toast.makeText(MainActivity.this, "No RFIDs found", Toast.LENGTH_SHORT).show();
+        }
         //sPreviousRFID = a.toString();
     }
 
@@ -445,16 +485,23 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         switch (sCase) {
             case "RFID":
                 //tvRFID.setText(sMSG);
-                tvTotalRFIDs.setText("");
-                /*StringBuilder sb = new StringBuilder();
+                /*tvTotalRFIDs.setText("");
+                *//*StringBuilder sb = new StringBuilder();
                 String sPreviousString = "";
                 for(int i=0; i<alName.size();i++) {
                     sb.append(sPreviousString).append(System.getProperty("line.separator")).append(alName.get(i));
                     sPreviousString = alName.get(i);
-                }*/
+                }*//*
                 String s = TextUtils.join(Objects.requireNonNull(System.getProperty("line.separator")), alName);
                 //tvRFID.setText(sb);
-                tvStatus.setText(s);
+                tvStatus.setText(s);*/
+
+                productsRVAdapter = new ProductsRVAdapter(MainActivity.this, alName, alID);
+                rvProducts.setAdapter(productsRVAdapter);
+                //rlRVHeading.setVisibility(View.VISIBLE);
+                llRVParent.setVisibility(View.VISIBLE);
+                rvProducts.setVisibility(View.VISIBLE);
+                tvTotalRFIDs.setText("");
                 break;
             case "SUCCESS":
                 this.alDeliveryOrderNumber = alName;
@@ -481,7 +528,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         public filterAdapter(Context context, int textViewResourceId, ArrayList<String> item) {
             super(context, textViewResourceId, item);
             filteredList = item;
-            originalList = new ArrayList<String>(filteredList);
+            originalList = new ArrayList<>(filteredList);
         }
         @Override
         public int getCount() {
