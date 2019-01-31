@@ -16,6 +16,6 @@ public class StaticReferenceClass {
 
     public static final String DB_NAME = "Trufrost-server1";//"Trufrost-Latest";//
 
-    public static final String USER_ID = "admin";//"vijay@gmail.com";//"vijay.eh4@gmail.com";//"admin";//
+    public static final String USER_ID = "autochipindia505@gmail.com";//"vijay@gmail.com";//"vijay.eh4@gmail.com";//"admin";//
     public static final String PASSWORD = "autochip@505";//"a";////"auto
 }

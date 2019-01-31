@@ -51,17 +51,16 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:switchPadding="8dp"
+                android:switchPadding="6dp"
+                android:textStyle="bold"
                 android:text="Delivery Order "
-                android:textAppearance="@android:style/TextAppearance.Medium"
-                android:visibility="gone" />
+                android:textAppearance="@android:style/TextAppearance.Small"
+                android:visibility="visible" />
 
             <AutoCompleteTextView
                 android:id="@+id/actv_delivery_order_no"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="40dp"
-                android:layout_marginEnd="40dp"
                 android:hint="Type for order number"
                 android:visibility="gone" />
 
@@ -133,6 +132,7 @@
                             android:textStyle="bold" />
 
                         <TextView
+                            android:id="@+id/tv_quantity_heading"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_alignParentEnd="true"

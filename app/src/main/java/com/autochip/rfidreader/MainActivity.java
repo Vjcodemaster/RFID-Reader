@@ -22,6 +22,7 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.CompoundButton;
@@ -38,11 +39,15 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 import app_utility.CircularProgressBar;
 import app_utility.OnServiceInterface;
 import app_utility.PowerReceiver;
+import app_utility.RFIDAsyncTask;
+import app_utility.StaticReferenceClass;
 import app_utility.StringUtils;
 
 import static app_utility.StaticReferenceClass.sINVENTORYURL;
@@ -69,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     private boolean isInitialized = false;
     private ArrayList<HashMap<String, String>> tagList;
     private boolean loopFlag = false;
-    TextView tvTotalRFIDs;
+    TextView tvTotalRFIDs, tvQuantityHeading;
     ArrayList<String> alDeliveryOrderNumber = new ArrayList<>();
     AutoCompleteTextView textView;
     //RelativeLayout rlRVHeading;
@@ -79,6 +84,8 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
 
     IntentFilter intentFilter;
     BroadcastReceiver mReceiver;
+
+    String itemAtPosition = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,6 +145,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
 
         tvRFID = findViewById(R.id.tv_rfid);
         tvStatus = findViewById(R.id.tv_status);
+        tvQuantityHeading = findViewById(R.id.tv_quantity_heading);
         tvTotalRFIDs = findViewById(R.id.tv_total_rfids);
         aSwitch = findViewById(R.id.swtich_stock);
         //rlRVHeading = findViewById(R.id.rl_rv_heading);
@@ -164,19 +172,29 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
             }
         });
 
+        textView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                itemAtPosition = (String) parent.getItemAtPosition(position);
+            }
+        });
+
         /*Intent in = new Intent(MainActivity.this, RFIDReadService.class);
         startService(in);*/
 
         switchDelivery.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked){
+                if (isChecked) {
                     aSwitch.setClickable(false);
                     textView.setVisibility(View.VISIBLE);
+                    RFIDAsyncTask RFIDAsyncTask = new RFIDAsyncTask(MainActivity.this);
+                    RFIDAsyncTask.execute(String.valueOf(2));
 
                 } else {
                     aSwitch.setClickable(true);
                     textView.setVisibility(View.GONE);
+                    itemAtPosition = "";
                     hideKeyboard(buttonView);
                 }
             }
@@ -211,6 +229,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
             }
         });
     }
+
     public void hideKeyboard(View view) {
         InputMethodManager imm = (InputMethodManager) getSystemService(Activity.INPUT_METHOD_SERVICE);
         imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
@@ -218,7 +237,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
 
 
     @Override
-    public void onStop(){
+    public void onStop() {
          /*
         unregistering receivers to avoid memory leak
          */
@@ -250,16 +269,23 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                 }*/
 
 
-                if(!loopFlag) {
-                    nFlagSize = 0;
-                    readTags();
-                    //rlRVHeading.setVisibility(View.GONE);
-                    llRVParent.setVisibility(View.GONE);
-                    rvProducts.setVisibility(View.GONE);
-                }
-                else {
-                    stopScan();
-                }
+               /*if(switchDelivery.isChecked() && itemAtPosition.equals("")){
+                   Toast.makeText(MainActivity.this, "Please select Order", Toast.LENGTH_SHORT).show();
+               } else {*/
+                   if (!loopFlag) {
+                       if(switchDelivery.isChecked() && itemAtPosition.equals("")){
+                           Toast.makeText(MainActivity.this, "Please select Order", Toast.LENGTH_SHORT).show();
+                       } else {
+                           nFlagSize = 0;
+                           readTags();
+                           //rlRVHeading.setVisibility(View.GONE);
+                           llRVParent.setVisibility(View.GONE);
+                           rvProducts.setVisibility(View.GONE);
+                       }
+                   } else {
+                       stopScan();
+                   }
+               //}
             }
             return true;
         }
@@ -297,28 +323,32 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         }
     }
 
-    private void sendDataToServer(){
+    private void sendDataToServer() {
         String sMsg;
         String URL;
-        if(stockFlag==0) {
+        if (stockFlag == 0) {
             sMsg = "false";
             URL = sRFIDURL;
-        }
-        else {
+        } else {
             sMsg = "true";
             URL = sINVENTORYURL;
         }
         ArrayList<String> alRFIDs = new ArrayList<>();
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("db", "Trufrost-server1"); //Trufrost-Testing
-            jsonObject.put("user", "admin");
-            jsonObject.put("password", "autochip@505");
+            jsonObject.put("db", StaticReferenceClass.DB_NAME); //Trufrost-Testing
+            jsonObject.put("user", StaticReferenceClass.USER_ID);
+            jsonObject.put("password", StaticReferenceClass.PASSWORD);
 
+            if(!itemAtPosition.equals("")){
+                jsonObject.put("gatepass_num", itemAtPosition);
+            } else {
+                jsonObject.put("start_inventory", sMsg);
+            }
 
             HashMap<String, String> hm;
 
-            for(int i=0;i<tagList.size();i++){
+            for (int i = 0; i < tagList.size(); i++) {
                 hm = new HashMap<>(tagList.get(i));
                 alRFIDs.add(hm.get("tagUii").substring(4));
             }
@@ -326,8 +356,8 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
             JSONArray jsonArray = new JSONArray(alRFIDs);
             //jsonArray.put(alRFIDs);
             jsonObject.put("rfids", jsonArray);
-            jsonObject.put("start_inventory", sMsg);
-        }catch (Exception e){
+            //jsonObject.put("start_inventory", sMsg);
+        } catch (Exception e) {
             e.printStackTrace();
         }
         /*HashMap<String, String> params = new HashMap<>();
@@ -348,7 +378,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         String sRFID = android.text.TextUtils.join(",", alRFIDs);
         params.put("rfids", sRFID);
         params.put("start_inventory", sMsg);*/
-        if(alRFIDs.size()>=1) {
+        if (alRFIDs.size() >= 1) {
             setProgressBar();
             VolleyTask volleyTask = new VolleyTask(getApplicationContext(), jsonObject, "PUSH_RFID", stockFlag, URL);
             tagList = new ArrayList<>();
@@ -410,9 +440,9 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
 
             }
 
-            if(tagList.size()>nFlagSize) {
+            if (tagList.size() > nFlagSize) {
                 //String sb = tvRFID.getText() + System.getProperty("line.separator") + map.get("tagUii");
-                if(nFlagSize==0){
+                if (nFlagSize == 0) {
                     tvRFID.setText("");
                 }
                 String sb = tvRFID.getText() + System.getProperty("line.separator") + map.get("tagUii").substring(4);
@@ -446,7 +476,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         return existFlag;
     }
 
-     class InitTask extends AsyncTask<String, Integer, Boolean> {
+    class InitTask extends AsyncTask<String, Integer, Boolean> {
         ProgressDialog mypDialog;
 
         @Override
@@ -487,13 +517,18 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     public void onServiceCall(String sCase, int code, String sMSG, String sSubmitStatus, ArrayList<Integer> alID, ArrayList<String> alName) {
         switch (sCase) {
             case "RFID":
-                if(code==901){
+                if (code == 901) {
+                    tvStatus.setText(sSubmitStatus);
+                    tvTotalRFIDs.setText("");
+                }
+                if (code == 902) {
+                    tvQuantityHeading.setText("Delv. Quantity");
                     tvStatus.setText(sSubmitStatus);
                     tvTotalRFIDs.setText("");
                 }
                 //tvRFID.setText(sMSG);
                 /*tvTotalRFIDs.setText("");
-                *//*StringBuilder sb = new StringBuilder();
+                 *//*StringBuilder sb = new StringBuilder();
                 String sPreviousString = "";
                 for(int i=0; i<alName.size();i++) {
                     sb.append(sPreviousString).append(System.getProperty("line.separator")).append(alName.get(i));
@@ -503,7 +538,8 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                 //tvRFID.setText(sb);
                 tvStatus.setText(s);*/
 
-                if(alName!=null && alName.size()>=1 && code==0) {
+                if (alName != null && alName.size() >= 1 && code == 0) {
+                    tvQuantityHeading.setText("Recv. Quantity");
                     productsRVAdapter = new ProductsRVAdapter(MainActivity.this, alName, alID);
                     rvProducts.setAdapter(productsRVAdapter);
                     //rlRVHeading.setVisibility(View.VISIBLE);
@@ -519,13 +555,16 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                 alDeliveryOrderNumber.add("HYJGHJ21212");
                 alDeliveryOrderNumber.add("CVCVQW32333");
                 alDeliveryOrderNumber.add("KIPP632B2U9");*/
+                /*final String[] COUNTRIES = new String[] {
+                        "ASDGW23234324322", "WGVCC23234324322", "TPQPA23234324322", "LOLVL23234324322", "PYNGH23234324322"
+                };
+                ArrayList<String> al = new ArrayList<>(Arrays.asList(COUNTRIES));*/
+                listAdapter = new filterAdapter(MainActivity.this, android.R.layout.simple_dropdown_item_1line, alDeliveryOrderNumber);
+                /*adapter = new ArrayAdapter<>(this,
+                        android.R.layout.simple_dropdown_item_1line, alDeliveryOrderNumber);*/
 
-                //listAdapter = new filterAdapter(MainActivity.this, android.R.layout.simple_dropdown_item_1line,alDeliveryOrderNumber);
-                adapter = new ArrayAdapter<>(this,
-                        android.R.layout.simple_dropdown_item_1line, alDeliveryOrderNumber);
-
-                //textView.setAdapter(listAdapter);
-                textView.setAdapter(adapter);
+                textView.setAdapter(listAdapter);
+                //textView.setAdapter(adapter);
                 break;
         }
         if (circularProgressBar != null && circularProgressBar.isShowing()) {
@@ -543,6 +582,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
             filteredList = item;
             originalList = new ArrayList<>(filteredList);
         }
+
         @Override
         public int getCount() {
             return filteredList.size();
@@ -587,52 +627,56 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
             return tv;
         }*/
         @Override
-        public Filter getFilter() {
-            return filter;
+        public Filter getFilter()
+        {
+            return nameFilter;
         }
-        /*@Override    //disabling the selection of 0 position of array's
-        public boolean isEnabled(int position) {
-            *//*if(position == 0 || filteredList.get(position).contains("Destination"))
-                return false;
-            else*//*
-                return super.isEnabled(position);
-        }*/
 
-        private Filter filter = new Filter() {
+        Filter nameFilter = new Filter()
+        {
             @Override
-            protected FilterResults performFiltering(CharSequence constraint) {
-                //constraint stores whatever the user type in autotextview
-                //if(constraint.length()>=1){
-                    filteredList.clear();
-                    FilterResults filterResults = new FilterResults();
-                    if (constraint != null) {
-                        for(int i = 0;i<originalList.size();i++)
-                        {
-
-                            if(originalList.get(i).contains(constraint.toString().toLowerCase()) || originalList.get(i).contains(constraint.toString().toUpperCase())){
-                                filteredList.add(originalList.get(i));
-                            }
-                        }
-                        // Retrieve the autocomplete results.
-                        filterResults.values = filteredList;
-                        filterResults.count = filteredList.size();
-                        return filterResults;
-                    } else {
-                        filterResults.count = originalList.size();
-                        filterResults.values = originalList;
-                        textView.showDropDown();
-                        return filterResults;
-                    }
-
-                /*}
-                else
-                    return null;*/
+            public CharSequence convertResultToString(Object resultValue)
+            {
+                String str = (String) resultValue;
+                return str;
             }
 
             @Override
-            protected void publishResults(CharSequence contraint, FilterResults results) {
-                if (results != null && results.count > 0) {
-                    notifyDataSetChanged();
+            protected FilterResults performFiltering(CharSequence constraint)
+            {
+                if (constraint != null)
+                {
+                    filteredList.clear();
+                    for (String names : originalList)
+                    {
+                        if (names.toLowerCase().contains(constraint.toString().toLowerCase().substring(names.length()-4, names.length()-1)))
+                        {
+                            filteredList.add(names);
+                        }
+                    }
+                    FilterResults filterResults = new FilterResults();
+                    filterResults.values = filteredList;
+                    filterResults.count = filteredList.size();
+                    return filterResults;
+                }
+                else
+                {
+                    return new FilterResults();
+                }
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results)
+            {
+                List<String> filterList = (ArrayList<String>) results.values;
+                if (results.count > 0)
+                {
+                    clear();
+                    for (String item : filterList)
+                    {
+                        add(item);
+                        notifyDataSetChanged();
+                    }
                 }
             }
         };

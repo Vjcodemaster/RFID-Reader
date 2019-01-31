@@ -142,6 +142,18 @@ public class VolleyTask {
                     String sResult = jsonObject.getString("result");
                     jsonObject = new JSONObject(sResult);
                     sResponseCode = jsonObject.getInt("response_code");
+                    if(sResponseCode==201){
+                        ERROR_CODE = 901;
+                        msg = jsonObject.getString("message");
+                        sendMsgToActivity();
+                        return;
+                    }
+                    if(sResponseCode==300){
+                        ERROR_CODE = 902;
+                        msg = jsonObject.getString("message");
+                        sendMsgToActivity();
+                        return;
+                    }
                     msg = jsonObject.getString("message");
                     JSONArray jsonArray = new JSONArray(msg);
                     //JSONObject jsonObject1;

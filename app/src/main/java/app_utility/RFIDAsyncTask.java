@@ -39,7 +39,7 @@ public class RFIDAsyncTask extends AsyncTask<String, Void, String> {
     ArrayList<Integer> alID = new ArrayList<>();
     ArrayList<String> alName = new ArrayList<>();
     ArrayList<String> alDeliveryOrderNumber = new ArrayList<>();
-
+    private CircularProgressBar circularProgressBar;
 
 
     //private ArrayList<String[]> alInsuranceHistory = new ArrayList<>();
@@ -53,8 +53,10 @@ public class RFIDAsyncTask extends AsyncTask<String, Void, String> {
 
 
     @Override
-    protected void onPreExecute() {
+    protected void onPreExecute()
+    {
         super.onPreExecute();
+        setProgressBar();
     }
 
     @Override
@@ -97,6 +99,9 @@ public class RFIDAsyncTask extends AsyncTask<String, Void, String> {
                 MainActivity.onServiceInterface.onServiceCall("SUCCESS", 0,"", "", null, alDeliveryOrderNumber);
                 break;
         }
+        if (circularProgressBar != null && circularProgressBar.isShowing()) {
+            circularProgressBar.dismiss();
+        }
     }
 
     /*
@@ -120,9 +125,9 @@ public class RFIDAsyncTask extends AsyncTask<String, Void, String> {
         OdooConnect oc = OdooConnect.connect(SERVER_URL, PORT_NO, DB_NAME, USER_ID, PASSWORD);
 
         Object[] conditions = new Object[2];
-        conditions[0] = new Object[]{"state", "=", "assigned"};
-        //conditions[1] = new Object[]{"delivery_name", "=", "Gurugram Warehouse: Delivery Orders"};
-        conditions[1] = new Object[]{"origin", "=", "Quot/TC/1819/00036"};
+        conditions[0] = new Object[]{"state", "=", "confirmed"};
+        conditions[1] = new Object[]{"delivery_name", "=", "Delivery Orders"};
+        //conditions[1] = new Object[]{"origin", "=", "Quot/TC/1819/00036"};
         //conditions[1] = new Object[]{"picking_type_id", "=", "Gurugram Warehouse: Delivery Orders"};
         List<HashMap<String, Object>> data = oc.search_read("stock.picking", new Object[]{conditions}, "name");
 
@@ -142,6 +147,13 @@ public class RFIDAsyncTask extends AsyncTask<String, Void, String> {
 
     private void unableToConnectServer(int errorCode) {
         //MainActivity.asyncInterface.onAsyncTaskCompleteGeneral("SERVER_ERROR", 2001, errorCode, "", null);
+    }
+
+    private void setProgressBar() {
+        circularProgressBar = new CircularProgressBar(context);
+        circularProgressBar.setCanceledOnTouchOutside(false);
+        circularProgressBar.setCancelable(false);
+        circularProgressBar.show();
     }
 
 }
