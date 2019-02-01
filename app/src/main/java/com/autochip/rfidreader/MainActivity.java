@@ -272,20 +272,20 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                /*if(switchDelivery.isChecked() && itemAtPosition.equals("")){
                    Toast.makeText(MainActivity.this, "Please select Order", Toast.LENGTH_SHORT).show();
                } else {*/
-                   if (!loopFlag) {
-                       if(switchDelivery.isChecked() && itemAtPosition.equals("")){
-                           Toast.makeText(MainActivity.this, "Please select Order", Toast.LENGTH_SHORT).show();
-                       } else {
-                           nFlagSize = 0;
-                           readTags();
-                           //rlRVHeading.setVisibility(View.GONE);
-                           llRVParent.setVisibility(View.GONE);
-                           rvProducts.setVisibility(View.GONE);
-                       }
-                   } else {
-                       stopScan();
-                   }
-               //}
+                if (!loopFlag) {
+                    if (switchDelivery.isChecked() && itemAtPosition.equals("")) {
+                        Toast.makeText(MainActivity.this, "Please select Order", Toast.LENGTH_SHORT).show();
+                    } else {
+                        nFlagSize = 0;
+                        readTags();
+                        //rlRVHeading.setVisibility(View.GONE);
+                        llRVParent.setVisibility(View.GONE);
+                        rvProducts.setVisibility(View.GONE);
+                    }
+                } else {
+                    stopScan();
+                }
+                //}
             }
             return true;
         }
@@ -340,7 +340,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
             jsonObject.put("user", StaticReferenceClass.USER_ID);
             jsonObject.put("password", StaticReferenceClass.PASSWORD);
 
-            if(!itemAtPosition.equals("")){
+            if (!itemAtPosition.equals("")) {
                 jsonObject.put("gatepass_num", itemAtPosition);
             } else {
                 jsonObject.put("start_inventory", sMsg);
@@ -517,6 +517,10 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     public void onServiceCall(String sCase, int code, String sMSG, String sSubmitStatus, ArrayList<Integer> alID, ArrayList<String> alName) {
         switch (sCase) {
             case "RFID":
+                if (code == 900 || code == 300 || code == 202) {
+                    tvStatus.setText(sSubmitStatus);
+                    tvTotalRFIDs.setText("");
+                }
                 if (code == 901) {
                     tvStatus.setText(sSubmitStatus);
                     tvTotalRFIDs.setText("");
@@ -538,16 +542,17 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                 //tvRFID.setText(sb);
                 tvStatus.setText(s);*/
 
-                if (alName != null && alName.size() >= 1 && code == 0) {
-                    tvQuantityHeading.setText("Recv. Quantity");
-                    productsRVAdapter = new ProductsRVAdapter(MainActivity.this, alName, alID);
-                    rvProducts.setAdapter(productsRVAdapter);
-                    //rlRVHeading.setVisibility(View.VISIBLE);
-                    llRVParent.setVisibility(View.VISIBLE);
-                    rvProducts.setVisibility(View.VISIBLE);
-                    tvTotalRFIDs.setText("");
-                    tvRFID.setText("");
-                }
+                if (code == 201 || code == 200)
+                    if (alName != null && alName.size() >= 1) {
+                        tvQuantityHeading.setText("Recv. Quantity");
+                        productsRVAdapter = new ProductsRVAdapter(MainActivity.this, alName, alID);
+                        rvProducts.setAdapter(productsRVAdapter);
+                        //rlRVHeading.setVisibility(View.VISIBLE);
+                        llRVParent.setVisibility(View.VISIBLE);
+                        rvProducts.setVisibility(View.VISIBLE);
+                        tvTotalRFIDs.setText("");
+                        tvRFID.setText("");
+                    }
                 break;
             case "SUCCESS":
                 this.alDeliveryOrderNumber = alName;
@@ -627,12 +632,49 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
             return tv;
         }*/
         @Override
-        public Filter getFilter()
-        {
+        public Filter getFilter() {
             return nameFilter;
         }
 
-        Filter nameFilter = new Filter()
+        Filter nameFilter = new Filter() {
+            @Override
+            public CharSequence convertResultToString(Object resultValue) {
+                String str = (String) resultValue;
+                return str;
+            }
+
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                if (constraint != null) {
+                    filteredList.clear();
+                    for (String item : originalList) {
+                        if (constraint.toString().toLowerCase().startsWith(constraint.toString().toLowerCase())) {
+                            filteredList.add(item);
+                        }
+                    }
+                    FilterResults filterResults = new FilterResults();
+                    filterResults.values = filteredList;
+                    filterResults.count = filteredList.size();
+                    return filterResults;
+                } else {
+                    return new FilterResults();
+                }
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                List<String> filterList = (ArrayList<String>) results.values;
+                if (results.count > 0) {
+                    clear();
+                    for (String item : filterList) {
+                        add(item);
+                        notifyDataSetChanged();
+                    }
+                }
+            }
+        };
+
+        /*Filter nameFilter = new Filter()
         {
             @Override
             public CharSequence convertResultToString(Object resultValue)
@@ -679,7 +721,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                     }
                 }
             }
-        };
+        };*/
     }
 
     private void setProgressBar() {

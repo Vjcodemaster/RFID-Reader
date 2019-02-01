@@ -6,10 +6,7 @@ package app_utility;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
-import android.util.Base64;
 
 import com.autochip.rfidreader.LoginActivity;
 import com.autochip.rfidreader.MainActivity;
@@ -140,13 +137,15 @@ public class RFIDAsyncTask extends AsyncTask<String, Void, String> {
         }
         catch (Exception e){
             e.printStackTrace();
+            sMsgResult = "Unable to reach server, please try again later";
+            unableToConnectServer(900);
         }
         //LoginActivity.onServiceInterface.onServiceCall("SUCCESS", "", "", alID, alName);
     }
 
 
     private void unableToConnectServer(int errorCode) {
-        //MainActivity.asyncInterface.onAsyncTaskCompleteGeneral("SERVER_ERROR", 2001, errorCode, "", null);
+        MainActivity.onServiceInterface.onServiceCall("SERVER_ERROR", errorCode, "", sMsgResult, null, null);
     }
 
     private void setProgressBar() {

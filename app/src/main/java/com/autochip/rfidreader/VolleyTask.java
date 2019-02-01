@@ -2,7 +2,6 @@ package com.autochip.rfidreader;
 
 import android.content.Context;
 import android.content.Intent;
-import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
@@ -41,7 +40,7 @@ public class VolleyTask {
     String URL;
     JSONObject jsonObject = new JSONObject();
 
-    public VolleyTask(Context context, JSONObject jsonObject, String sCase, int stockFlag,String URL) {
+    public VolleyTask(Context context, JSONObject jsonObject, String sCase, int stockFlag, String URL) {
         this.context = context;
         this.jsonObject = jsonObject;
         this.stockFlag = stockFlag;
@@ -49,7 +48,7 @@ public class VolleyTask {
         Volley(sCase);
     }
 
-    public VolleyTask(Context context, HashMap<String, String> params, String sCase, int stockFlag,String URL) {
+    public VolleyTask(Context context, HashMap<String, String> params, String sCase, int stockFlag, String URL) {
         this.context = context;
         this.params = params;
         this.stockFlag = stockFlag;
@@ -68,7 +67,7 @@ public class VolleyTask {
         }
     }
 
-    private void pushRFIDToOdoo(String URL){
+    private void pushRFIDToOdoo(String URL) {
 
         StringRequest request = new StringRequest(
                 Request.Method.POST, URL, //BASE_URL + Endpoint.USER
@@ -86,6 +85,10 @@ public class VolleyTask {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         isAlreadyInProgress = false;
+
+                        if (error.toString().equals("com.android.volley.TimeoutError")) {
+                            return;
+                        }
                         if (mStatusCode == 401) {
                             // HTTP Status Code: 401 Unauthorized
                         }
@@ -110,9 +113,14 @@ public class VolleyTask {
             }
         };
         request.setRetryPolicy(new DefaultRetryPolicy(
+                10000,
+                DefaultRetryPolicy.DEFAULT_TIMEOUT_MS,
+                DefaultRetryPolicy.DEFAULT_TIMEOUT_MS));
+
+        /*request.setRetryPolicy(new DefaultRetryPolicy(
                 6000,
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
-                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));*/
         // add the request object to the queue to be executed
         ApplicationController.getInstance().addToRequestQueue(request);
 
@@ -130,7 +138,7 @@ public class VolleyTask {
         }
     }*/
 
-    private void onPostVolleyPushRFID(int mStatusCode, String response) {
+    /*private void onPostVolleyPushRFID(int mStatusCode, String response) {
         //SnackBarToast snackBarToast;
 
         switch (mStatusCode) {
@@ -142,43 +150,103 @@ public class VolleyTask {
                     String sResult = jsonObject.getString("result");
                     jsonObject = new JSONObject(sResult);
                     sResponseCode = jsonObject.getInt("response_code");
+
+                    if(sResponseCode==200) {
+                        msg = jsonObject.getString("message");
+                        JSONArray jsonArray = new JSONArray(msg);
+                        //JSONObject jsonObject1;
+                        alData = new ArrayList<>();
+                        alID = new ArrayList<>();
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            String product = jsonArray.getJSONObject(i).getString("product");
+                            String quantity = jsonArray.getJSONObject(i).getString("quantity_received");
+
+                            //alData.add(product + " : " + quantity);
+                            alData.add(product);
+                            alID.add(Integer.valueOf(quantity));
+                            //jsonObject1 = new JSONObject(jsonArray.getJSONObject(0).getJSONArray());
+                        }
+                    }
+
                     if(sResponseCode==201){
-                        ERROR_CODE = 901;
+                        msg = jsonObject.getString("message");
+                        JSONArray jsonArray = new JSONArray(msg);
+                        //JSONObject jsonObject1;
+                        alData = new ArrayList<>();
+                        alID =  new ArrayList<>();
+                        for(int i=0; i<jsonArray.length(); i++){
+                            String product = jsonArray.getJSONObject(i).getString("name");
+                            String quantity = jsonArray.getJSONObject(i).getString("product_uom_qty");
+
+                            //alData.add(product + " : " + quantity);
+                            alData.add(product);
+                            alID.add(Integer.valueOf(quantity));
+                            //jsonObject1 = new JSONObject(jsonArray.getJSONObject(0).getJSONArray());
+                        }
+                        sendMsgToActivity();
+                        *//*ERROR_CODE = 901;
                         msg = jsonObject.getString("message");
                         sendMsgToActivity();
-                        return;
+                        return;*//*
                     }
                     if(sResponseCode==300){
-                        ERROR_CODE = 902;
+                        ERROR_CODE = 0;
+                        msg = jsonObject.getString("message");
+                        JSONArray jsonArray = new JSONArray(msg);
+                        //JSONObject jsonObject1;
+                        alData = new ArrayList<>();
+                        alID =  new ArrayList<>();
+                        for(int i=0; i<jsonArray.length(); i++){
+                            String product = jsonArray.getJSONObject(i).getString("name");
+                            String quantity = jsonArray.getJSONObject(i).getString("product_uom_qty");
+
+                            //alData.add(product + " : " + quantity);
+                            alData.add(product);
+                            alID.add(Integer.valueOf(quantity));
+                            //jsonObject1 = new JSONObject(jsonArray.getJSONObject(0).getJSONArray());
+                        }
+                        *//*ERROR_CODE = 902;
                         msg = jsonObject.getString("message");
                         sendMsgToActivity();
-                        return;
-                    }
-                    msg = jsonObject.getString("message");
-                    JSONArray jsonArray = new JSONArray(msg);
-                    //JSONObject jsonObject1;
-                    alData = new ArrayList<>();
-                    alID =  new ArrayList<>();
-                    for(int i=0; i<jsonArray.length(); i++){
-                        String product = jsonArray.getJSONObject(i).getString("product");
-                        String quantity = jsonArray.getJSONObject(i).getString("quantity_received");
-
-                        //alData.add(product + " : " + quantity);
-                        alData.add(product);
-                        alID.add(Integer.valueOf(quantity));
-                        //jsonObject1 = new JSONObject(jsonArray.getJSONObject(0).getJSONArray());
+                        return;*//*
+                        //return;
                     }
 
+                    if(sResponseCode==300){
+                        ERROR_CODE = 0;
+                        msg = jsonObject.getString("message");
+                        JSONArray jsonArray = new JSONArray(msg);
+                        //JSONObject jsonObject1;
+                        alData = new ArrayList<>();
+                        alID =  new ArrayList<>();
+                        for(int i=0; i<jsonArray.length(); i++){
+                            String product = jsonArray.getJSONObject(i).getString("name");
+                            String quantity = jsonArray.getJSONObject(i).getString("product_uom_qty");
+
+                            //alData.add(product + " : " + quantity);
+                            alData.add(product);
+                            alID.add(Integer.valueOf(quantity));
+                            //jsonObject1 = new JSONObject(jsonArray.getJSONObject(0).getJSONArray());
+                        }
+                        *//*ERROR_CODE = 902;
+                        msg = jsonObject.getString("message");
+                        sendMsgToActivity();
+                        return;*//*
+                        //return;
+                    }
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    if(sResponseCode==300){
+
+                    }
                     ERROR_CODE = 901;
                     msg = "Unable to reach server, please try again";
                     sendMsgToActivity();
-                    /*try {
+                    *//*try {
                         onServiceInterface.onServiceCall("RFID", String.valueOf(this.jsonObject.get("rfids")), msg);
                     } catch (JSONException e1) {
                         e1.printStackTrace();
-                    }*/
+                    }*//*
                 }
                 if(sResponseCode == 200) {
                     //msg = "Success";
@@ -192,9 +260,9 @@ public class VolleyTask {
                         //onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
                     }
                     //Toast.makeText(context, "RFID : " + params.get("rfids") + msg, Toast.LENGTH_LONG).show();
-                    /*for (int i=0; i<2; i++){
+                    *//*for (int i=0; i<2; i++){
                         Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-                    }*/
+                    }*//*
 
                 } else if(sResponseCode == 300){
                     //msg = "RFID Doesn't exist";
@@ -208,11 +276,11 @@ public class VolleyTask {
                         //onServiceInterface.onServiceCall("RFID", params.get("rfids"), msg);
                     }
                     //Toast.makeText(context, "RFID : " + params.get("rfids") + msg, Toast.LENGTH_LONG).show();
-                    /*for (int i=0; i<2; i++){
+                    *//*for (int i=0; i<2; i++){
                         Toast.makeText(context, msg, Toast.LENGTH_LONG).show();
-                    }*/
+                    }*//*
                 }
-                /*JSONObject jsonObject;
+                *//*JSONObject jsonObject;
                 PreferenceClass preferenceClass = new PreferenceClass(aActivity);
 
                 try {
@@ -237,7 +305,7 @@ public class VolleyTask {
 
                 Intent in = new Intent(aActivity, HomeScreenActivity.class);
                 aActivity.startActivity(in);
-                aActivity.finish();*/
+                aActivity.finish();*//*
 
                 break;
             case 300: //RFID not exist
@@ -271,12 +339,115 @@ public class VolleyTask {
                 }
                 break;
         }
+        *//*if (circularProgressBar != null && circularProgressBar.isShowing()) {
+            circularProgressBar.dismiss();
+        }*//*
+    }*/
+
+    private void onPostVolleyPushRFID(int mStatusCode, String response) {
+        if (mStatusCode == 200) {
+            JSONObject jsonObject;
+            int sResponseCode = 0;
+            try {
+                jsonObject = new JSONObject(response);
+                String sResult = jsonObject.getString("result");
+                jsonObject = new JSONObject(sResult);
+                sResponseCode = jsonObject.getInt("response_code");
+            } catch (Exception e) {
+                ERROR_CODE = 900;
+                msg = "No IDS matched";
+                e.printStackTrace();
+                sendMsgToActivity();
+                return;
+            }
+            if (sResponseCode == 0) {
+                msg = "Unable to connect to server, please try again later";
+                sendMsgToActivity();
+                return;
+            }
+            switch (sResponseCode) {
+                case 200: //success
+                    try {
+                        msg = jsonObject.getString("message");
+                        JSONArray jsonArray = new JSONArray(msg);
+                        alData = new ArrayList<>();
+                        alID = new ArrayList<>();
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            String product = jsonArray.getJSONObject(i).getString("product");
+                            String quantity = jsonArray.getJSONObject(i).getString("quantity_received");
+
+                            alData.add(product);
+                            alID.add(Integer.valueOf(quantity));
+                        }
+                        sendMsgToActivity();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        ERROR_CODE = 901;
+                        msg = "Unable to reach server, please try again";
+                        sendMsgToActivity();
+                    }
+
+                    break;
+                case 201:
+                    ERROR_CODE = 201;
+                    try {
+                        msg = jsonObject.getString("message");
+                        JSONArray jsonArray = new JSONArray(msg);
+                        //JSONObject jsonObject1;
+                        alData = new ArrayList<>();
+                        alID = new ArrayList<>();
+                        for (int i = 0; i < jsonArray.length(); i++) {
+                            String product = jsonArray.getJSONObject(i).getString("name");
+                            String quantity = jsonArray.getJSONObject(i).getString("product_uom_qty");
+
+                            alData.add(product);
+                            alID.add(Integer.valueOf(quantity));
+                        }
+                        sendMsgToActivity();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case 202:
+                    try {
+                        ERROR_CODE = 202;
+                        msg = jsonObject.getString("message");
+                        sendMsgToActivity();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case 300: //RFID not exist
+                    try {
+                        ERROR_CODE = 300;
+                        msg = jsonObject.getString("message");
+                        sendMsgToActivity();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
+                case 203: //user not found
+                    //snackBarToast = new SnackBarToast(aActivity, aActivity.getResources().ge4tString(R.string.user_not_found));
+                    break;
+                case 204: //authentication failed(wrong password)
+                    //snackBarToast = new SnackBarToast(aActivity, aActivity.getResources().getString(R.string.wrong_password));
+                    break;
+                case 402:
+                    try {
+                        msg = jsonObject.getString("message");
+                        sendMsgToActivity();
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
+                    break;
+            }
+        }
         /*if (circularProgressBar != null && circularProgressBar.isShowing()) {
             circularProgressBar.dismiss();
         }*/
     }
 
-    private void sendMsgToActivity(){
+    private void sendMsgToActivity() {
         try {
             onServiceInterface.onServiceCall("RFID", ERROR_CODE, String.valueOf(this.jsonObject.get("rfids")), msg, alID, alData);
         } catch (JSONException e1) {
