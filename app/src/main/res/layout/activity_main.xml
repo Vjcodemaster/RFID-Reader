@@ -61,6 +61,8 @@
                 android:id="@+id/actv_delivery_order_no"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
                 android:hint="Type for order number"
                 android:visibility="gone" />
 

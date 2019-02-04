@@ -175,7 +175,8 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         textView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                itemAtPosition = (String) parent.getItemAtPosition(position);
+                itemAtPosition = parent.getItemAtPosition(position).toString().trim();
+                //textView.setEnabled(false);
             }
         });
 
@@ -188,8 +189,24 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                 if (isChecked) {
                     aSwitch.setClickable(false);
                     textView.setVisibility(View.VISIBLE);
+                    //textView.setEnabled(true);
+                    //textView.clearListSelection();
                     RFIDAsyncTask RFIDAsyncTask = new RFIDAsyncTask(MainActivity.this);
                     RFIDAsyncTask.execute(String.valueOf(2));
+                    /*alDeliveryOrderNumber.add("ASDA3242342");
+                alDeliveryOrderNumber.add("HYJGHJ21212");
+                alDeliveryOrderNumber.add("CVCVQW32333");
+                alDeliveryOrderNumber.add("KIPP632B2U9");
+                final String[] COUNTRIES = new String[] {
+                        "ASDGW23234324322", "WGVCC670102020", "TPQPA306619974", "LOLVL188259968", "PYNGH8888445520"
+                };
+
+                ArrayList<String> al = new ArrayList<>(Arrays.asList(COUNTRIES));
+                    listAdapter = new filterAdapter(MainActivity.this, android.R.layout.simple_dropdown_item_1line, al);*/
+                /*adapter = new ArrayAdapter<>(MainActivity.this,
+                        android.R.layout.simple_dropdown_item_1line, al);*/
+
+                    textView.setAdapter(listAdapter);
 
                 } else {
                     aSwitch.setClickable(true);
@@ -276,6 +293,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                     if (switchDelivery.isChecked() && itemAtPosition.equals("")) {
                         Toast.makeText(MainActivity.this, "Please select Order", Toast.LENGTH_SHORT).show();
                     } else {
+                        textView.setEnabled(false);
                         nFlagSize = 0;
                         readTags();
                         //rlRVHeading.setVisibility(View.GONE);
@@ -579,6 +597,12 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         if (circularProgressBar != null && circularProgressBar.isShowing()) {
             circularProgressBar.dismiss();
         }
+        if(switchDelivery.isChecked()){
+            textView.setEnabled(true);
+            textView.setText("");
+            itemAtPosition = "";
+        }
+
     }
 
     public class filterAdapter extends ArrayAdapter<String> implements Filterable {
@@ -652,7 +676,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                 if (constraint != null) {
                     filteredList.clear();
                     for (String item : originalList) {
-                        if (constraint.toString().toLowerCase().startsWith(constraint.toString().toLowerCase())) {
+                        if (item.toLowerCase().contains(constraint.toString().toLowerCase())) {
                             filteredList.add(item);
                         }
                     }
@@ -661,19 +685,31 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                     filterResults.count = filteredList.size();
                     return filterResults;
                 } else {
+                    //filteredList = originalList;
                     return new FilterResults();
                 }
             }
 
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
-                List<String> filterList = (ArrayList<String>) results.values;
+                /*List<String> filterList = (ArrayList<String>) results.values;
                 if (results.count > 0) {
-                    clear();
+                    //clear();
                     for (String item : filterList) {
                         add(item);
-                        notifyDataSetChanged();
+
                     }
+                    notifyDataSetChanged();
+                }*/
+                if (results != null && results.count > 0) {
+                    notifyDataSetChanged();
+                } else {
+                    listAdapter = new filterAdapter(MainActivity.this, android.R.layout.simple_dropdown_item_1line, originalList);
+                /*adapter = new ArrayAdapter<>(this,
+                        android.R.layout.simple_dropdown_item_1line, alDeliveryOrderNumber);*/
+
+                    textView.setAdapter(listAdapter);
+                    textView.showDropDown();
                 }
             }
         };

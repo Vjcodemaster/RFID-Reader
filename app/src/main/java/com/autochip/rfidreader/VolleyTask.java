@@ -86,7 +86,7 @@ public class VolleyTask {
                     public void onErrorResponse(VolleyError error) {
                         isAlreadyInProgress = false;
                         msg = "No response from Server";
-                        onServiceInterface.onServiceCall("STOP_PROGRESS_BAR", 0,params.get("rfids"), msg, null, null);
+                        onServiceInterface.onServiceCall("STOP_PROGRESS_BAR", 0, params.get("rfids"), msg, null, null);
                         /*if (error.toString().equals("com.android.volley.TimeoutError")) {
                             return;
                         }
@@ -445,7 +445,7 @@ public class VolleyTask {
                         ERROR_CODE = 402;
                         msg = jsonObject.getString("message");
                         sendMsgToActivity();
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                     break;
