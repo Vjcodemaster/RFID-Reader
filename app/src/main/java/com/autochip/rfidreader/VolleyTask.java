@@ -85,13 +85,14 @@ public class VolleyTask {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         isAlreadyInProgress = false;
-
-                        if (error.toString().equals("com.android.volley.TimeoutError")) {
+                        msg = "No response from Server";
+                        onServiceInterface.onServiceCall("STOP_PROGRESS_BAR", 0,params.get("rfids"), msg, null, null);
+                        /*if (error.toString().equals("com.android.volley.TimeoutError")) {
                             return;
                         }
                         if (mStatusCode == 401) {
                             // HTTP Status Code: 401 Unauthorized
-                        }
+                        }*/
                     }
                 }) {
 
@@ -367,6 +368,7 @@ public class VolleyTask {
             }
             switch (sResponseCode) {
                 case 200: //success
+                    ERROR_CODE = 200;
                     try {
                         msg = jsonObject.getString("message");
                         JSONArray jsonArray = new JSONArray(msg);
@@ -398,7 +400,7 @@ public class VolleyTask {
                         alID = new ArrayList<>();
                         for (int i = 0; i < jsonArray.length(); i++) {
                             String product = jsonArray.getJSONObject(i).getString("name");
-                            String quantity = jsonArray.getJSONObject(i).getString("product_uom_qty");
+                            String quantity = jsonArray.getJSONObject(i).getString("quantity_done");
 
                             alData.add(product);
                             alID.add(Integer.valueOf(quantity));
@@ -417,6 +419,15 @@ public class VolleyTask {
                         e.printStackTrace();
                     }
                     break;
+                case 203:
+                    try {
+                        ERROR_CODE = 203;
+                        msg = jsonObject.getString("message");
+                        sendMsgToActivity();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    break;
                 case 300: //RFID not exist
                     try {
                         ERROR_CODE = 300;
@@ -426,14 +437,12 @@ public class VolleyTask {
                         e.printStackTrace();
                     }
                     break;
-                case 203: //user not found
-                    //snackBarToast = new SnackBarToast(aActivity, aActivity.getResources().ge4tString(R.string.user_not_found));
-                    break;
                 case 204: //authentication failed(wrong password)
                     //snackBarToast = new SnackBarToast(aActivity, aActivity.getResources().getString(R.string.wrong_password));
                     break;
                 case 402:
                     try {
+                        ERROR_CODE = 402;
                         msg = jsonObject.getString("message");
                         sendMsgToActivity();
                     }catch (Exception e){

@@ -517,7 +517,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     public void onServiceCall(String sCase, int code, String sMSG, String sSubmitStatus, ArrayList<Integer> alID, ArrayList<String> alName) {
         switch (sCase) {
             case "RFID":
-                if (code == 900 || code == 300 || code == 202) {
+                if (code == 900 || code == 300 || code == 202 || code == 203 || code == 402) {
                     tvStatus.setText(sSubmitStatus);
                     tvTotalRFIDs.setText("");
                 }
@@ -570,6 +570,10 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
 
                 textView.setAdapter(listAdapter);
                 //textView.setAdapter(adapter);
+                break;
+            case "STOP_PROGRESS_BAR":
+                tvStatus.setText(sSubmitStatus);
+                circularProgressBar.dismiss();
                 break;
         }
         if (circularProgressBar != null && circularProgressBar.isShowing()) {
