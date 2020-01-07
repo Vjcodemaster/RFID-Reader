@@ -1,6 +1,7 @@
 package app_utility;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.util.Log;
 
 import java.net.MalformedURLException;
@@ -45,6 +46,7 @@ public class OdooConnect {
     private String mPassword;
     private Integer mUserId;
     private URL mUrl;
+    static Context context;
 
     private static final String CONNECTOR_NAME = "OdooConnect";
 
@@ -58,7 +60,11 @@ public class OdooConnect {
         mUserName = user;
         mPassword = pass;
         mUserId = id;
-        mUrl = new URL(String.format("http://%s:%s/xmlrpc/2/object", server, port));
+        mUrl = new URL(String.format("%s/xmlrpc/2/object", server, port));
+    }
+
+    private OdooConnect(Context context){
+        OdooConnect.context = context;
     }
 
     /**
@@ -96,16 +102,71 @@ public class OdooConnect {
     private static OdooConnect login(String server, Integer port, String db, String user, String pass) {
         OdooConnect connection = null;
         try {
-            URL loginUrl = new URL(String.format("http://%s:%s/xmlrpc/2/common", server, port));
-            XMLRPCClient client = new XMLRPCClient(loginUrl);
+            URL loginUrl = new URL(String.format("%s/xmlrpc/2/common", server, port));
+            //XMLRPCClient client = new XMLRPCClient(loginUrl);
+            XMLRPCClient client = new XMLRPCClient(loginUrl, "", XMLRPCClient.FLAGS_SSL_IGNORE_ERRORS);
             Object[] list = {db, user, pass, emptyMap()};
+            //SSLCertificateHandler.nuke();
             int id = (int) client.call("authenticate", list);
+
             connection = new OdooConnect(server, port, db, user, pass, id);
         } catch (XMLRPCException | MalformedURLException | ClassCastException e) {
             Log.d(CONNECTOR_NAME, e.toString());
         }
         return connection;
     }
+
+    /*private static OdooConnect login(String server, Integer port, String db, String user, String pass) {
+        OdooConnect connection = null;
+        try {
+            URL loginUrl = new URL(String.format("https://%s:%s/xmlrpc/2/common", server, port));
+            //XMLRPCClient client = new XMLRPCClient(loginUrl);
+            XMLRPCClient client = new XMLRPCClient(loginUrl, "", XMLRPCClient.FLAGS_SSL_IGNORE_INVALID_CERT);
+            TrustManagerFactory tmf = null;
+            KeyManagerFactory kmf = null;
+            try {
+                CertificateFactory cf = CertificateFactory.getInstance("X.509");
+                InputStream caInput = new BufferedInputStream(context.getAssets().open("certificate.crt"));
+                Certificate ca;
+                ca = cf.generateCertificate(caInput);
+                System.out.println("ca=" + ((X509Certificate) ca).getSubjectDN());
+                // Create a KeyStore containing our trusted CAs
+                String keyStoreType = KeyStore.getDefaultType();
+                KeyStore keyStore = KeyStore.getInstance(keyStoreType);
+                InputStream in = context.getResources().openRawResource(R.raw.mykeystore);
+                keyStore.load(in, "mysecret".toCharArray());
+                keyStore.setCertificateEntry("ca", ca);
+                // Create a TrustManager that trusts the CAs in our KeyStore
+                String tmfAlgorithm = TrustManagerFactory.getDefaultAlgorithm();
+                kmf = KeyManagerFactory.getInstance(tmfAlgorithm);
+                tmf = TrustManagerFactory.getInstance(tmfAlgorithm);
+                tmf.init(keyStore);
+                // Create an SSLContext that uses our TrustManager
+                SSLContext context = SSLContext.getInstance("TLS");
+                context.init(null, tmf.getTrustManagers(), null);
+                HostnameVerifier hostnameVerifier = new HostnameVerifier() {
+                    @Override
+                    public boolean verify(String hostname, SSLSession session) {
+                        HostnameVerifier hv = HttpsURLConnection.getDefaultHostnameVerifier();
+                        return true;
+                    }
+                };
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+            Object[] list = {db, user, pass, emptyMap()};
+
+           *//* assert tmf != null;
+            client.installCustomTrustManagers(tmf.getTrustManagers());
+            assert kmf != null;
+            client.installCustomKeyManagers(kmf.getKeyManagers());*//*
+            int id = (int) client.call("authenticate", list);
+            connection = new OdooConnect(server, port, db, user, pass, id);
+        } catch (XMLRPCException | MalformedURLException | ClassCastException e) {
+            Log.d(CONNECTOR_NAME, e.toString());
+        }
+        return connection;
+    }*/
 
     /**
      * You can pass new Object[0] to specify an empty list of conditions and no fields,

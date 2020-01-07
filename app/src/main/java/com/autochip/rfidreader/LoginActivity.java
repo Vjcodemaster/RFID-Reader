@@ -1,8 +1,8 @@
 package com.autochip.rfidreader;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -10,7 +10,17 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.security.ProviderInstaller;
+
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+
+import javax.net.ssl.SSLContext;
 
 import app_utility.CircularProgressBar;
 import app_utility.OnServiceInterface;
@@ -35,6 +45,18 @@ public class LoginActivity extends AppCompatActivity implements OnServiceInterfa
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
+            // Call some material design APIs here
+            try {
+                ProviderInstaller.installIfNeeded(getApplicationContext());
+                SSLContext sslContext;
+                sslContext = SSLContext.getInstance("TLSv1.2");
+                sslContext.init(null, null, null);
+                sslContext.createSSLEngine();
+            } catch (GooglePlayServicesRepairableException | GooglePlayServicesNotAvailableException | NoSuchAlgorithmException | KeyManagementException e) {
+                e.printStackTrace();
+            }
+        }
 
         onServiceInterface = this;
         sharedPreferenceClass = new SharedPreferenceClass(LoginActivity.this);

@@ -1,13 +1,14 @@
 package com.autochip.rfidreader;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.v4.app.FragmentManager;
-import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.ArrayList;
 
@@ -20,9 +21,9 @@ class ProductsRVAdapter extends RecyclerView.Adapter<ProductsRVAdapter.ProductsH
 
     //private OnFragmentInteractionListener mListener;
     private Context context;
-    private FragmentManager supportFragmentManager;
-    ArrayList<String> alProducts;
-    ArrayList<Integer> alQuantity;
+    //private FragmentManager supportFragmentManager;
+    private ArrayList<String> alProducts;
+    private ArrayList<Integer> alQuantity;
 
 
     ProductsRVAdapter(Context context, ArrayList<String> alProducts, ArrayList<Integer> alQuantity) {
@@ -31,6 +32,7 @@ class ProductsRVAdapter extends RecyclerView.Adapter<ProductsRVAdapter.ProductsH
         this.alQuantity = alQuantity;
     }
 
+    @NonNull
     @Override
     public ProductsHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.rv_products, parent, false);

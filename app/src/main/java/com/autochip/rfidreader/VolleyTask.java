@@ -1,7 +1,7 @@
 package com.autochip.rfidreader;
 
 import android.content.Context;
-import android.content.Intent;
+import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
 import com.android.volley.DefaultRetryPolicy;
@@ -85,8 +85,14 @@ public class VolleyTask {
                     @Override
                     public void onErrorResponse(VolleyError error) {
                         isAlreadyInProgress = false;
+                        NetworkResponse networkResponse = error.networkResponse;
                         msg = "No response from Server";
-                        onServiceInterface.onServiceCall("STOP_PROGRESS_BAR", 0, params.get("rfids"), msg, null, null);
+                        try {
+                            onServiceInterface.onServiceCall("STOP_PROGRESS_BAR", 0, params.get("rfids"), msg, null, null);
+                        } catch (Exception e) {
+                            ERROR_CODE = 76009;
+                            e.printStackTrace();
+                        }
                         /*if (error.toString().equals("com.android.volley.TimeoutError")) {
                             return;
                         }
@@ -347,7 +353,7 @@ public class VolleyTask {
 
     private void onPostVolleyPushRFID(int mStatusCode, String response) {
         if (mStatusCode == 200) {
-            JSONObject jsonObject;
+            JSONObject jsonObject = null;
             int sResponseCode = 0;
             try {
                 jsonObject = new JSONObject(response);
@@ -356,7 +362,17 @@ public class VolleyTask {
                 sResponseCode = jsonObject.getInt("response_code");
             } catch (Exception e) {
                 ERROR_CODE = 900;
-                msg = "No IDS matched";
+                try {
+                    if (jsonObject != null) {
+                        String sResult = jsonObject.getString("error");
+                        jsonObject = new JSONObject(sResult);
+                        msg = jsonObject.getString("message");
+                    }
+
+                } catch (JSONException e1) {
+                    e1.printStackTrace();
+                }
+                //msg = "No IDS matched";
                 e.printStackTrace();
                 sendMsgToActivity();
                 return;
@@ -365,6 +381,9 @@ public class VolleyTask {
                 msg = "Unable to connect to server, please try again later";
                 sendMsgToActivity();
                 return;
+            }
+            if (ERROR_CODE == 76009) {
+                Toast.makeText(context, "Server is not responding", Toast.LENGTH_SHORT).show();
             }
             switch (sResponseCode) {
                 case 200: //success

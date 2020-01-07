@@ -108,7 +108,7 @@
                     android:paddingEnd="8dp"
                     android:visibility="visible" />
 
-                <android.support.v7.widget.CardView
+                <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_marginTop="5dp"
                     android:layout_height="wrap_content"
@@ -143,9 +143,9 @@
                             android:textAppearance="@android:style/TextAppearance.Medium"
                             android:textStyle="bold" />
                     </RelativeLayout>
-                </android.support.v7.widget.CardView>
+                </androidx.cardview.widget.CardView>
 
-                <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
+                <androidx.recyclerview.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
                     android:id="@+id/rv_products"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"

@@ -16,18 +16,18 @@ import android.graphics.Color;
 import android.os.Build;
 import android.os.IBinder;
 import android.os.SystemClock;
-import android.support.annotation.RequiresApi;
-import android.support.v4.app.NotificationCompat;
+
+import androidx.annotation.RequiresApi;
+import androidx.core.app.NotificationCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import app_utility.NetworkState;
 import app_utility.PowerReceiver;
 
-import static android.support.v4.app.NotificationCompat.PRIORITY_MAX;
+import static androidx.core.app.NotificationCompat.PRIORITY_MAX;
 import static app_utility.StaticReferenceClass.sINVENTORYURL;
 import static app_utility.StaticReferenceClass.sRFIDURL;
 
@@ -36,14 +36,13 @@ public class RFIDReadService extends Service {
     String channelId = "app_utility.TrackingService";
     String channelName = "tracking";
     public static int stockFlag = 0;
-    ArrayList<String> alData = new ArrayList<>();
 
     public static boolean isAlreadyInProgress = false;
 
     static RFIDReadService refOfService;
     NetworkState networkState;
-    IntentFilter intentFilterData;
-    BroadcastReceiver broadcastReceiverData;
+    //IntentFilter intentFilterData;
+    //BroadcastReceiver broadcastReceiverData;
 
     String sPreviousRFID = "";
     NotificationManager notifyMgr;
@@ -108,8 +107,8 @@ public class RFIDReadService extends Service {
                     }*/
                         //if(!sPreviousRFID.equals(a.toString())) {
                         HashMap<String, String> params = new HashMap<>();
-                        ArrayList<String> alTmp = new ArrayList<>();
-                        alTmp.add(a.toString());
+                        /*ArrayList<String> alTmp = new ArrayList<>();
+                        alTmp.add(a.toString());*/
                         params.put("db", "Trufrost-Live"); //Trufrost-Testing
                         params.put("user", "admin");
                         params.put("password", "autochip@505");
@@ -143,13 +142,6 @@ public class RFIDReadService extends Service {
         return START_STICKY;
     }
 
-    /*public boolean isForeground(String myPackage) {
-        ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
-        List<ActivityManager.RunningTaskInfo> runningTaskInfo = manager.getRunningTasks(1);
-        ComponentName componentInfo = runningTaskInfo.get(0).topActivity;
-        return componentInfo.getPackageName().equals(myPackage);
-    }*/
-
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void startForeground() {
@@ -171,6 +163,7 @@ public class RFIDReadService extends Service {
         notifyMgr.createNotificationChannel(chan);
         return channelId;
     }
+
     @Override
     public IBinder onBind(Intent intent) {
         //throw new UnsupportedOperationException("Not yet implemented");

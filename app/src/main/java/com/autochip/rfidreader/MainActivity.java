@@ -10,10 +10,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -33,26 +29,32 @@ import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import com.rscja.deviceapi.RFIDWithUHF;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 
 import app_utility.CircularProgressBar;
 import app_utility.OnServiceInterface;
 import app_utility.PowerReceiver;
 import app_utility.RFIDAsyncTask;
+import app_utility.SharedPreferenceClass;
 import app_utility.StaticReferenceClass;
 import app_utility.StringUtils;
 
 import static app_utility.StaticReferenceClass.sINVENTORYURL;
 import static app_utility.StaticReferenceClass.sRFIDURL;
 
+@SuppressWarnings("All")
 public class MainActivity extends AppCompatActivity implements OnServiceInterface {
 
     public static OnServiceInterface onServiceInterface;
@@ -65,7 +67,6 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     private CircularProgressBar circularProgressBar;
 
     RecyclerView rvProducts;
-    private ProductsRVAdapter productsRVAdapter;
 
     filterAdapter listAdapter;
 
@@ -80,10 +81,10 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
     //RelativeLayout rlRVHeading;
     LinearLayout llRVParent;
 
-    ArrayAdapter<String> adapter;
-
     IntentFilter intentFilter;
     BroadcastReceiver mReceiver;
+
+    SharedPreferenceClass sharedPreferenceClass;
 
     String itemAtPosition = "";
 
@@ -92,6 +93,8 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         onServiceInterface = this;
+
+        sharedPreferenceClass = new SharedPreferenceClass(MainActivity.this);
         tagList = new ArrayList<>();
         intentFilter = new IntentFilter(Intent.ACTION_SCREEN_ON);
         //intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
@@ -313,7 +316,6 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
 
     private void readTags() {
 
-
         if (mReader.startInventoryTag(0, 0)) {
             tvStatus.setText("");
             /*BtInventory.setText(mContext
@@ -352,11 +354,15 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
             URL = sINVENTORYURL;
         }
         ArrayList<String> alRFIDs = new ArrayList<>();
+        //alRFIDs.add("E28011606000020928F0B928");
+        //alRFIDs.add("E28011700000020A2D034436");
+        //alRFIDs.add("E28011606000020928F0B928122");
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("db", StaticReferenceClass.DB_NAME); //Trufrost-Testing
             jsonObject.put("user", StaticReferenceClass.USER_ID);
             jsonObject.put("password", StaticReferenceClass.PASSWORD);
+            jsonObject.put("company_id", Integer.valueOf(sharedPreferenceClass.getCompanyName().split(",")[1]));
 
             if (!itemAtPosition.equals("")) {
                 jsonObject.put("gatepass_num", itemAtPosition);
@@ -449,10 +455,10 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                 //LvTags.setAdapter(adapter);
                 //tv_count.setText("" + adapter.getCount());
             } else {
-                int tagcount = Integer.parseInt(
+                int tagCount = Integer.parseInt(
                         tagList.get(index).get("tagCount"), 10) + 1;
 
-                map.put("tagCount", String.valueOf(tagcount));
+                map.put("tagCount", String.valueOf(tagCount));
 
                 tagList.set(index, map);
 
@@ -499,7 +505,6 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
 
         @Override
         protected Boolean doInBackground(String... params) {
-            // TODO Auto-generated method stub
             return mReader.init();
         }
 
@@ -520,7 +525,6 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
 
         @Override
         protected void onPreExecute() {
-            // TODO Auto-generated method stub
             super.onPreExecute();
 
             mypDialog = new ProgressDialog(MainActivity.this);
@@ -563,7 +567,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
                 if (code == 201 || code == 200)
                     if (alName != null && alName.size() >= 1) {
                         tvQuantityHeading.setText("Recv. Quantity");
-                        productsRVAdapter = new ProductsRVAdapter(MainActivity.this, alName, alID);
+                        ProductsRVAdapter productsRVAdapter = new ProductsRVAdapter(MainActivity.this, alName, alID);
                         rvProducts.setAdapter(productsRVAdapter);
                         //rlRVHeading.setVisibility(View.VISIBLE);
                         llRVParent.setVisibility(View.VISIBLE);
@@ -597,7 +601,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
         if (circularProgressBar != null && circularProgressBar.isShowing()) {
             circularProgressBar.dismiss();
         }
-        if(switchDelivery.isChecked()){
+        if (switchDelivery.isChecked()) {
             textView.setEnabled(true);
             textView.setText("");
             itemAtPosition = "";
@@ -659,6 +663,7 @@ public class MainActivity extends AppCompatActivity implements OnServiceInterfac
             }*//*
             return tv;
         }*/
+        @NonNull
         @Override
         public Filter getFilter() {
             return nameFilter;
