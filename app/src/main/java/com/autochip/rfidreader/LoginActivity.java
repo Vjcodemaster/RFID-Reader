@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import javax.net.ssl.SSLContext;
 
 import app_utility.CircularProgressBar;
+import app_utility.NetworkState;
 import app_utility.OnServiceInterface;
 import app_utility.RFIDAsyncTask;
 import app_utility.SharedPreferenceClass;
@@ -35,9 +36,10 @@ public class LoginActivity extends AppCompatActivity implements OnServiceInterfa
 
     Spinner spinner;
     ArrayAdapter<String> adapterSpinner;
-    ArrayList<Integer> alID= new ArrayList<>();
+    ArrayList<Integer> alID = new ArrayList<>();
     ArrayList<String> alCompanyName;
     Button btnDone;
+    NetworkState networkState;
 
     public static OnServiceInterface onServiceInterface;
 
@@ -57,13 +59,12 @@ public class LoginActivity extends AppCompatActivity implements OnServiceInterfa
                 e.printStackTrace();
             }
         }
-
+        networkState = new NetworkState();
         onServiceInterface = this;
         sharedPreferenceClass = new SharedPreferenceClass(LoginActivity.this);
 
 
         alCompanyName = new ArrayList<>();
-
 
 
         spinner = findViewById(R.id.spinner_company);
@@ -72,7 +73,7 @@ public class LoginActivity extends AppCompatActivity implements OnServiceInterfa
         btnDone.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(spinner.getSelectedItemPosition()==0){
+                if (spinner.getSelectedItemPosition() == 0) {
                     Toast.makeText(LoginActivity.this, "please select a company", Toast.LENGTH_SHORT).show();
                 } else {
                     String sSelectedCompanyName = spinner.getSelectedItem().toString();
@@ -86,7 +87,7 @@ public class LoginActivity extends AppCompatActivity implements OnServiceInterfa
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if(position==0){
+                if (position == 0) {
                     Toast.makeText(LoginActivity.this, "please select a company", Toast.LENGTH_SHORT).show();
                 }
             }
@@ -102,15 +103,18 @@ public class LoginActivity extends AppCompatActivity implements OnServiceInterfa
         alCompanyName.add("asdasd");
         alCompanyName.add("asdasd");*/
         //spinner.setAdapter(adapterSpinner);
-        if(!sharedPreferenceClass.getCompanyName().equals("")){
-            Intent in = new Intent(LoginActivity.this, MainActivity.class);
-            startActivity(in);
-            finish();
-        } else {
-            setProgressBar();
-            RFIDAsyncTask RFIDAsyncTask = new RFIDAsyncTask(LoginActivity.this);
-            RFIDAsyncTask.execute(String.valueOf(1));
-        }
+        if (networkState.isOnline() && networkState.isNetworkAvailable(getApplicationContext()))
+            if (!sharedPreferenceClass.getCompanyName().equals("")) {
+                Intent in = new Intent(LoginActivity.this, MainActivity.class);
+                startActivity(in);
+                finish();
+            } else {
+                setProgressBar();
+                RFIDAsyncTask RFIDAsyncTask = new RFIDAsyncTask(LoginActivity.this);
+                RFIDAsyncTask.execute(String.valueOf(1));
+            }
+        else
+            Toast.makeText(LoginActivity.this, "Please check your internet connection and try again", Toast.LENGTH_LONG).show();
         /*Intent in = new Intent(LoginActivity.this, MainActivity.class);
         startActivity(in);*/
     }
@@ -129,12 +133,12 @@ public class LoginActivity extends AppCompatActivity implements OnServiceInterfa
                 this.alID = alID;
                 this.alCompanyName = alName;
                 //adapterSpinner.notifyDataSetChanged();
-                adapterSpinner = new ArrayAdapter<>(LoginActivity.this,  android.R.layout.simple_spinner_dropdown_item, alCompanyName);
+                adapterSpinner = new ArrayAdapter<>(LoginActivity.this, android.R.layout.simple_spinner_dropdown_item, alCompanyName);
                 spinner.setAdapter(adapterSpinner);
                 if (circularProgressBar != null && circularProgressBar.isShowing()) {
                     circularProgressBar.dismiss();
                 }
-                 //android.R.layout.simple_spinner_item
+                //android.R.layout.simple_spinner_item
                 //adapter.setDropDownViewResource(android.R.layout.simple_spinner_item);
 
                 break;
